@@ -33,4 +33,3 @@ for each in dataList:
         tweet.append(each)
 
 df = pd.DataFrame(list(zip(date, tweet)), columns=["Date","Decred - Tweets"])
-df
