@@ -24,12 +24,11 @@ model = LinearRegression()
 LR = model.fit(normalised_X_train,normalised_y_train)
 y_pred = LR.predict(normalised_X_test)
 r2 = r2_score(y_pred,normalised_y_test)
-r2
+
 
 
 
 #LR model for ETH tweets and prices
-
 dropped_df = df.drop(['Date','Unnamed: 0'],axis=1)
 X_eth = dropped_df['Decred - ETH Tweets']
 y_eth = dropped_df['ETH-USD']
@@ -46,4 +45,3 @@ model = LinearRegression()
 LR = model.fit(normalised_X_train,normalised_y_train)
 y_pred = LR.predict(normalised_X_test)
 r2 = r2_score(y_pred,normalised_y_test)
-r2
