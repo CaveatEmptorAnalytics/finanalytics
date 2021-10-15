@@ -15,6 +15,10 @@ import statsmodels.api as sm
 from pandas_datareader import data
 from scipy.stats import norm
 
+'''
+Static charts
+'''
+
 # initialising datetime
 from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
@@ -50,27 +54,6 @@ def chart_analysis(crypto, years):
     returns_ts['Risk Free Rate'] = risk_free_rate/252
     # avg_rfr_ret = returns_ts['Risk Free Rate'].mean()
     returns_ts['Excess Returns'] = returns_ts - returns_ts['Risk Free Rate']
-    
-    # sharpe_ratio = ((avg_daily_returns - avg_rfr_ret) /returns_ts['Excess Returns'].std())*np.sqrt(252)
-    
-    # statistics for distribution
-    # close_mean = close_pct_change.mean()
-    # close_median = close_pct_change.median()
-    # close_std_dev = close_pct_change.std()
-    
-    # creating the plots
-    
-    #Close Percentage Change
-    # fig = px.line(close_pct_change, title='Bitcoin Close Percentage Change')
-    # fig.show()
-    
-    # return series
-    # fig = px.line(close_return_series, title='Bitcoin Close Return Series')
-    # fig.show()
-    
-    # volatility
-    # fig = px.line(ahv, title='Annual Historical Volatility')
-    # fig.show()
 
     return close_pct_change, close_return_series, ahv
 
@@ -92,7 +75,10 @@ close_return_series = close_return_series.reset_index()
 ahv = pd.DataFrame(ahv)
 ahv = ahv.reset_index()
 
-# dash implementation
+'''
+Dash Implementation
+'''
+# static charts
 app = dash.Dash()
 
 app.layout = html.Div(children=[
