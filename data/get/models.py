@@ -1,10 +1,7 @@
 import sys
-sys.path.append("")
+sys.path.append("data/get")
 from top10crypto import get_top_10_crypto
 from feature_engine import create_single_crypto_df
-import numpy as np
-from sklearn.model_selection import train_test_split
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LinearRegression
@@ -16,10 +13,9 @@ for crypto_code in crypto_list:
     crypto_df = create_single_crypto_df(crypto_code)
     scaler = MinMaxScaler()
     normalised_crypto_df = scaler.fit_transform(crypto_df)
-    print(normalised_crypto_df)
-    break
-    X= crypto_df.dropna()[['Open','Adj Close','High','Low','Volume']]
-    y = crypto_df.dropna()['fwd_mkt_ret_1m']
+
+    X= normalised_crypto_df.dropna()[['Open','Adj Close','High','Low','Volume']]
+    y = normalised_crypto_df.dropna()['fwd_mkt_ret_1m']
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
 
