@@ -19,11 +19,12 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 # set up parameters
 N_PORTFOLIOS = 10 ** 5
 N_DAYS = 365
-RISKY_ASSETS = ['BTC-USD', 'ETH-USD', 'WAVES-USD', 'XEM-USD', 'ADA-USD', 'LBC-USD','XMR-USD', 'BNB-USD', 'OMG-USD', 'MTL-USD']
+RISKY_ASSETS = ['ETH-USD', 'DGD-USD', 'XMR-USD', 'ADX-USD', 'BTC-USD', 'KNC-USD', 'BNT-USD', 'ICX-USD', 'LBC-USD', 'EMC2-USD']
 START_DATE = '2020-01-01'
 END_DATE = '2020-12-31'
 
@@ -47,9 +48,10 @@ portf_rtns = np.dot(weights, avg_returns)
 
 portf_vol = []
 for i in range(0, len(weights)):
-    portf_vol.append(np.sqrt(np.dot(weights[i].T, 
-                                    np.dot(cov_mat, weights[i]))))
+    portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
+
 portf_vol = np.array(portf_vol)  
+
 portf_sharpe_ratio = portf_rtns / portf_vol
 
 # Create a joint DataFrame with all data
@@ -57,25 +59,24 @@ portf_results_df = pd.DataFrame({'returns': portf_rtns,
                                  'volatility': portf_vol,
                                  'sharpe_ratio': portf_sharpe_ratio})
 
-# Locate the points creating the Efficient Frontier
-N_POINTS = 100
-portf_vol_ef = []
-indices_to_skip = []
+# display max sharpe ratio portfolio
+max_sharpe_ind = np.argmax(portf_results_df.sharpe_ratio)
+max_sharpe_portf = portf_results_df.loc[max_sharpe_ind]
+max_sharpe_portf_weights = weights[max_sharpe_ind]
 
-portf_rtns_ef = np.linspace(portf_results_df.returns.min(), 
-                            portf_results_df.returns.max(), 
-                            N_POINTS)
-portf_rtns_ef = np.round(portf_rtns_ef, 2)    
-portf_rtns = np.round(portf_rtns, 2)
+# display max returns portfolio
+max_rtns_ind = np.argmax(portf_results_df.returns)
+max_rtns_portf = portf_results_df.loc[max_rtns_ind]
+max_rtns_portf_weights = weights[max_rtns_ind]
 
-for point_index in range(N_POINTS):
-    if portf_rtns_ef[point_index] not in portf_rtns:
-        indices_to_skip.append(point_index)
-        continue
-    matched_ind = np.where(portf_rtns == portf_rtns_ef[point_index])
-    portf_vol_ef.append(np.min(portf_vol[matched_ind]))
-    
-portf_rtns_ef = np.delete(portf_rtns_ef, indices_to_skip)
+# display lowest volatility portfolio
+min_vol_ind = np.argmin(portf_results_df.volatility)
+min_vol_portf = portf_results_df.loc[min_vol_ind]
+min_vol_portf_weights = weights[min_vol_ind]
+
+
+
+
 
 # Plot using plotly (the chart is here)
 fig = px.scatter(portf_results_df, x="volatility", y="returns", color='sharpe_ratio')
@@ -83,27 +84,41 @@ fig.update_traces(marker=dict(size=10,
                               line=dict(width=1,
                                         color='DarkSlateGrey')),
                   selector=dict(mode='markers'))
-fig.show()
 
 # dash implementation
 app = dash.Dash()
 
-app.layout = html.Div(children=[
+volatilities = [0.8, 0.9, 1.0]
+
+app.layout = html.Div([
     html.H1(children="Efficient Frontier"),
-    dcc.Graph(
-        id="efficient_frontier",
-        figure = {
-            'data': [
-                {'x': portf_results_df['volatility'], 'y': portf_results_df['returns'],'type':'scatter'}
-            ]
-        },
-        style = {
-            'display':'inline-block',
-            'width': '500px',
-            'height': '400px'
-        }
-    )
+    dcc.Dropdown(
+        id='volatility', 
+        options=[{"value": x, "label": x} 
+                 for x in volatilities],
+        value='1'
+    ),
+    dcc.Graph(id="graph", figure=fig),
+    dcc.Graph(id="portfolio_tables")
 ])
+
+@app.callback(
+    Output("portfolio_tables", "figure"), 
+    [Input("volatility", "value")])
+def change_volatility(vol):
+    num_portfolios = N_PORTFOLIOS
+    portfolios_consider = {}
+    for i in range(num_portfolios):
+        if portf_results_df['volatility'][i].round(2) == float(vol):
+            portfolios_consider[i] = portf_results_df['returns'][i]
+    
+    portf_index_from_vol = max(portfolios_consider, key=portfolios_consider.get)
+
+    portf_ind_from_vol_weights = weights[portf_index_from_vol]
+
+    fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
+                 cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
