@@ -163,10 +163,20 @@ def add_row(n_clicks, rows, columns):
 def display_graph(data):
     df_fig = pd.DataFrame(data)
     # print(df_fig)
-    fig = px.bar(df_fig, x='Product', y='weightage')
-    
+    # fig = px.bar(df_fig, x='Product', y='weightage')
+    fig = px.pie(df_fig, names='Product', values='weightage')
+
+    # fig.show()
+    # fig2.show()
     return fig
 
+# @app.callback(
+#     Output('my_graph', 'figure'),
+#     [Input('our-table', 'data')])
+# def display(data):
+#     df_fig = pd.DataFrame(data)
+#     fig2 = px.pie(df_fig, names='Product', values='weightage')
+#     return fig2
 
 if __name__ == '__main__':
     app.run_server(debug=True)
