@@ -380,6 +380,7 @@ app.layout = dbc.Container(
     ]
 )
 
+
 # add a callback to update dataframe holding all the cryptos
 # checks for dataframe: 1. if the dataframe receives the first input, replace the dummy input, 2. if the dataframe already has 10 inputs, it will not update
 
@@ -544,8 +545,10 @@ def all_funcs(ticker, years, start_date, end_date):
     State('end_analyze_date', 'value')],
     prevent_initial_call = True
 )
+
+
 def update_portfolio_comparison(clicks, gut_feel_data, start_date, end_date):
-    recommended_weights = ""
+    recommended_weights = "get_reco_df(gut_feel_data)"
     gut_feel_weights = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
 
     recommended_returns = ""
@@ -558,30 +561,70 @@ def update_portfolio_comparison(clicks, gut_feel_data, start_date, end_date):
 
 @app.callback(
     Output("portfolio_tables", "children"), 
-    [Input("volatility", "value")])
-def change_volatility(vol):
-    num_portfolios = N_PORTFOLIOS
+    [Input("volatility", "value")],prevent_initial_call=True)
+
+
+
+# def change_volatility(vol):
+#     num_portfolios = N_PORTFOLIOS
+#     portfolios_consider = {}
+#     for i in range(num_portfolios):
+#         if portf_results_df['volatility'][i].round(2) == float(vol):
+#             portfolios_consider[i] = portf_results_df['returns'][i]
+#     portf_index_from_vol = max(portfolios_consider, key=portfolios_consider.get)
+#     portf_ind_from_vol_weights = weights[portf_index_from_vol]
+
+#     table_data = []
+#     for i in range(len(RISKY_ASSETS)):
+#         pair = [RISKY_ASSETS[i], portf_ind_from_vol_weights[i].round(2)]
+       
+#         table_data.append(pair)
+#     recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+#     fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+#     # fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
+#     #              cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
+#     return fig
+
+
+
+def change_volatility(vol_input):
+    if port_exists_vol_input(vol_input):
+        index_from_vol = portf_ind_from_vol(vol_input)
+        weights_from_vol = weights[index_from_vol]
+        table_data = []
+        for i in range(len(RISKY_ASSETS)):
+            pair = [RISKY_ASSETS[i], weights_from_vol[i].round(2)]
+            # print(pair)
+            table_data.append(pair)
+        recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+        fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+        # fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
+        #              cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
+        return fig
+    else:
+        print('Portfolio with a historical volatility of', vol_input, 'does not exist')
+
+
+def port_exists_vol_input(vol_input):
+    for i in range(N_PORTFOLIOS):
+        if portf_results_df['volatility'][i].round(2) == vol_input:
+            return True
+    return False
+
+def portf_ind_from_vol(vol_input):
     portfolios_consider = {}
-    for i in range(num_portfolios):
-        if portf_results_df['volatility'][i].round(2) == float(vol):
+    for i in range(N_PORTFOLIOS):
+        if portf_results_df['volatility'][i].round(2) == vol_input:
             portfolios_consider[i] = portf_results_df['returns'][i]
-    
-    portf_index_from_vol = max(portfolios_consider, key=portfolios_consider.get)
+            found = True
+    max_key = max(portfolios_consider, key=portfolios_consider.get)
+    return max_key
 
-    portf_ind_from_vol_weights = weights[portf_index_from_vol]
 
-    table_data = []
-    for i in range(len(RISKY_ASSETS)):
-        pair = [RISKY_ASSETS[i], portf_ind_from_vol_weights[i].round(2)]
-        table_data.append(pair)
-    
-    recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
 
-    fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
 
-    # fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
-    #              cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
-    return fig
+
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)

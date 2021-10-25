@@ -96,8 +96,8 @@ dash_table.DataTable(
         columns=[{'name': 'Product', 'id': 'Product', 'deletable': False, 'renamable': False},
                  {'name': 'weightage', 'id': 'weightage', 'deletable': True, 'renamable': True}
         ],
-        data=[{'Product': 'BTC', 'weightage': '0.1'},
-        ],
+        data={'Product': 'BTC', 'weightage': '0.1'},
+        ],[
         editable=True,                  # allow user to edit data inside tabel
         row_deletable=True,             # allow user to delete rows
         sort_action="native",           # give user capability to sort columns
