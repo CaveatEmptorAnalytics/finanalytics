@@ -329,14 +329,14 @@ app.layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         [],
-                        id="recommended_weights"
+                        id="gut_feel_weights"
                     ),
                     width=6,
                 ),
                 dbc.Col(
                     html.Div(
                         [],
-                        id="gut_feel_weights"
+                        id="recommended_weights"
                     ),
                     width=6,
                 ),
