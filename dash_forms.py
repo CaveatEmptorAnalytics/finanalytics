@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from scipy.stats.stats import skew
 import yfinance as yf
 import plotly.graph_objects as go
 
@@ -64,87 +65,108 @@ tickers = ['BTC-USD','ETH-USD','HEX-USD','ADA-USD','BNB-USD','XRP-USD','SOL1-USD
            'DCY-USD','GRN-USD','KNC-USD','LRG-USD','BRC-USD','SFMS-USD','BONFIRE-USD','VBK-USD', 'DTEP-USD',
            'QRL-USD','ETP-USD','NXT-USD','XSN-USD']
 
-# set up parameters
-N_PORTFOLIOS = 10 ** 5
-N_DAYS = 365
-RISKY_ASSETS = ['ETH-USD', 'DGD-USD', 'XMR-USD', 'ADX-USD', 'BTC-USD', 'KNC-USD', 'BNT-USD', 'ICX-USD', 'LBC-USD', 'EMC2-USD']
-START_DATE = '2020-01-01'
-END_DATE = '2020-12-31'
-
-n_assets = len(RISKY_ASSETS)
-
-prices_df = yf.download(RISKY_ASSETS, start=START_DATE, end=END_DATE, adjusted=True)
-
-# calculate annualized average returns and corresponding standard deviation
-returns_df = prices_df['Close'].pct_change().dropna()
-
-avg_returns = returns_df.mean() * N_DAYS
-cov_mat = returns_df.cov() * N_DAYS
-
-# Simulate random portfolio weights
-np.random.seed(42)
-weights = np.random.random(size=(N_PORTFOLIOS, n_assets))
-weights /=  np.sum(weights, axis=1)[:, np.newaxis]
-
-# Calculate portfolio metrics
-portf_rtns = np.dot(weights, avg_returns)
-
-portf_vol = []
-for i in range(0, len(weights)):
-    portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
-
-portf_vol = np.array(portf_vol)  
-
-portf_sharpe_ratio = portf_rtns / portf_vol
-
-# Create a joint DataFrame with all data
-portf_results_df = pd.DataFrame({'returns': portf_rtns,
-                                 'volatility': portf_vol,
-                                 'sharpe_ratio': portf_sharpe_ratio})
-
-# display max sharpe ratio portfolio
-max_sharpe_ind = np.argmax(portf_results_df.sharpe_ratio)
-max_sharpe_portf = portf_results_df.loc[max_sharpe_ind]
-max_sharpe_portf_weights = weights[max_sharpe_ind]
-
-# display max returns portfolio
-max_rtns_ind = np.argmax(portf_results_df.returns)
-max_rtns_portf = portf_results_df.loc[max_rtns_ind]
-max_rtns_portf_weights = weights[max_rtns_ind]
-
-# display lowest volatility portfolio
-min_vol_ind = np.argmin(portf_results_df.volatility)
-min_vol_portf = portf_results_df.loc[min_vol_ind]
-min_vol_portf_weights = weights[min_vol_ind]
-
-# Plot using plotly (the chart is here)
-# fig = px.scatter(portf_results_df, x="volatility", y="returns", color='sharpe_ratio')
-# fig.update_traces(marker=dict(size=10,
-#                               line=dict(width=1,
-#                                         color='DarkSlateGrey')),
-#                   selector=dict(mode='markers'))
-
-volatilities = [0.8, 0.9, 1.0]
-
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = dbc.Container(
     [
+        html.Div(
+            dbc.Container(
+                [
+                    html.H1("Input the following information", className="display-3"),
+                    html.Hr(className="my-2"),
+                    # html.P(
+                    #     "Use Containers to create a jumbotron to call attention to "
+                    #     "featured content or information.",
+                    #     className="lead",
+                    # ),
+                    # this section is for input investment amount
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.Label("Investment Amount", html_for="investment"),
+                                    dbc.Input(
+                                        type="text",
+                                        id="investment",
+                                    ),
+                                ],
+                            ),
+                        ]
+                    ),
+                    # this section is for the input start and end date
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.Label("Select the start date you would like to analyze", html_for="start_analyze_date"),
+                                    dbc.Input(
+                                        type="date",
+                                        id="start_analyze_date",
+                                        value="2020-01-01"
+                                    ),
+                                ],
+                                width=6,
+                                style={
+                                    'padding': 10
+                                },
+                            ),
+                            dbc.Col(
+                                [
+                                    dbc.Label("Select the end date you would like to analyze", html_for="end_analyze_date"),
+                                    dbc.Input(
+                                        type="date",
+                                        id="end_analyze_date",
+                                        value="2020-12-31"
+                                    ),
+                                ],
+                                width=6,
+                                style={
+                                    'padding': 10
+                                },
+                            ),
+                        ]
+                    ),
+                ],
+                fluid=True,
+                className="py-3",
+            ),
+            className="p-3 text-white bg-dark rounded-3",
+        ),
+        # this section is for them to select the crypto ticker that they want to analyse
         dbc.Row(
             [
                 dbc.Col(
                     [
-                        dbc.Label("Investment Amount", html_for="investment"),
-                        dbc.Input(
-                            type="text",
-                            id="investment",\
-                        ),
+                        dbc.Label("Select the crypto you would like it analyze", html_for="crypto_dropdown"),
+                        dcc.Dropdown(
+                                id="crypto_dropdown",
+                                options=[{"value": x, "label": x} 
+                                            for x in tickers]
+                            ),
                     ],
+                    width=4,
+                    style={
+                        'padding': 10
+                    },
                 ),
-            ]
+            ],
+        ),
+        dbc.Button("Generate Analysis Charts", color="dark", className="mr-1", id="submit_analysis_charts", n_clicks=0 ),
+        # this section displays the analysis charts
+        dbc.Row(
+            [
+                html.Div(id="display_statistics", className="col-4"),
+                html.Div(id="display_charts", className="col-8"),
+            ],
+            className="g-0",
+            style={
+                'padding-top': 50,
+                'padding-bottom': 100
+            },
         ),
         dbc.Row(
             [
+                # this section adds their gut feel portfolio
                 dbc.Col(
                     [
                         html.H3(["Select Your Portfolio"], className="text-center"),
@@ -220,30 +242,36 @@ app.layout = dbc.Container(
                     ],
                     width=6,
                 ),
+                # this section displays our recommended portfolio
                 dbc.Col(
                     [
                         html.H3(["Our Recommended Portfolio"], className="text-center"),
-                        dbc.Row(
+                        # this section switches the views of recommended portfolio
+                        dbc.Tabs(
                             [
-                                html.Div(
-                                    [
-                                        dbc.Label("Select Volatility", html_for="volatility"),
-                                        dcc.Dropdown(
-                                            id='volatility', 
-                                            options=[{"value": x, "label": x} 
-                                                    for x in volatilities],
-                                            value='1'
-                                        ),
-                                    ],
+                                # tab 1
+                                dbc.Tab(
+                                    label="Best Portfolio",
+                                    tab_id = "best"
+                                ),
+                                # tab 2
+                                dbc.Tab(
+                                    label="Adjust Volatility",
+                                    tab_id = "volatility"
+                                ),
+                                # tab 3
+                                dbc.Tab(
+                                    label="Adjust Returns",
+                                    tab_id = "returns"
                                 ),
                             ],
-                            style={
-                                'padding-top': 10,
-                                'padding-bottom': 10
-                            },
+                            id="tabs",
+                            active_tab = "best"
                         ),
                         dbc.Row(
                             [
+                                dcc.Slider(id="slider_bar", min=0, max=10, step=0.01, value=0),
+                                # html.Div(id="slider_bar"),
                                 html.Div(id="portfolio_tables"),
                             ],
                             style={
@@ -256,70 +284,11 @@ app.layout = dbc.Container(
                 )
             ],
             style={
-                'padding-top': 30,
-                'padding-bottom': 30
+                'padding-bottom': 100
             },
         ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        dbc.Label("Select the crypto you would like it analyze", html_for="crypto_dropdown"),
-                        dcc.Dropdown(
-                                id="crypto_dropdown"
-                            ),
-                    ],
-                    width=4,
-                    style={
-                        'padding': 10
-                    },
-                ),
-                dbc.Col(
-                    [
-                        dbc.Label("Select the start date you would like to analyze", html_for="start_analyze_date"),
-                        dbc.Input(
-                            type="date",
-                            id="start_analyze_date",
-                        ),
-                    ],
-                    width=4,
-                    style={
-                        'padding': 10
-                    },
-                ),
-                dbc.Col(
-                    [
-                        dbc.Label("Select the end date you would like to analyze", html_for="end_analyze_date"),
-                        dbc.Input(
-                            type="date",
-                            id="end_analyze_date",
-                        ),
-                    ],
-                    width=4,
-                    style={
-                        'padding': 10
-                    },
-                ),
-            ],
-        ),
-        dbc.Button("Generate Analysis Charts", color="dark", className="mr-1", id="submit_analysis_charts", n_clicks=0 ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(id="close_pct_change")
-                ),
-                dbc.Col(
-                    html.Div(id="close_return_series")
-                ),
-                dbc.Col(
-                    html.Div(id="ahv")
-                ),
-            ],
-            className="g-0",
-            style={
-                'padding': 10
-            },
-        ),
+        
+        
 
         dbc.Button("Generate Portfolio Comparison", color="dark", className="mr-1", id="submit_comparison", n_clicks=0),
         
@@ -386,6 +355,7 @@ app.layout = dbc.Container(
 
 # dash video guide https://www.youtube.com/watch?v=mTsZL-VmRVE
 
+# this section controls callbacks for gut feel portfolio
 @app.callback(
     Output("portfolio_table", 'data'),
     Input('submit_crypto', 'n_clicks'),
@@ -404,25 +374,10 @@ def add_row(n_clicks, crypto, weight, rows, columns):
 
     return rows
 
+# this section controls callbacks for chart analysis
 @app.callback(
-    Output("crypto_dropdown", 'options'),
-    Input('portfolio_table', 'data'),
-    prevent_initial_call = True
-)
-def add_dropdown_options(crypto_data):
-    output = []
-    for data in crypto_data:
-        output.append(data["crypto"])
-    
-    options = [{"value": x, "label": x} for x in output]
-
-    return options
-
-
-@app.callback(
-    [Output('close_pct_change', 'children'),
-    Output('close_return_series', 'children'),
-    Output('ahv', 'children')],
+    [Output('display_statistics', 'children'),
+    Output('display_charts', 'children')],
     Input('submit_analysis_charts', 'n_clicks'),
     [State('crypto_dropdown', 'value'),
     State('start_analyze_date', 'value'),
@@ -433,7 +388,12 @@ def update_charts(clicks, crypto, start_date, end_date):
     # receiving chart data
     ticker = crypto
     years = 1
-    close_pct_change, close_return_series, ahv = all_funcs(ticker, years, start_date, end_date)
+    close_pct_change, close_return_series, ahv, volatility, sharpe_ratio, annualized_returns, statistics, skewness, kurtosis = all_funcs(ticker, years, start_date, end_date)
+
+    stats_dict = {"labels": ["Volatility", "Sharpe Ratio", "Annualized Returns", "Skewness", "Kurtosis"], "values": [volatility, sharpe_ratio, annualized_returns, skewness, kurtosis]}
+
+    statistics_df = pd.DataFrame(stats_dict, index=stats_dict["labels"])
+    # statistics_df = statistics_df.reset_index()
 
     close_pct_change = pd.DataFrame(close_pct_change)
     close_pct_change = close_pct_change.reset_index()
@@ -445,55 +405,50 @@ def update_charts(clicks, crypto, start_date, end_date):
     ahv = ahv.reset_index()
     
     df1 = close_pct_change
-    close_pct_change = dcc.Graph(
-                        figure = {
-                            'data': [
-                                {'x': df1['Date'], 'y': df1['Close'],'type':'line'}
-                            ],
-                            'layout' : {
-                                'title': str(crypto) + ' Close Percentage Change'
-                            }
-                        },
-                        style = {
-                            'display':'inline-block',
-                            'width': '400px',
-                            'height': '400px'
-                        }
+
+    display_stats = dbc.Col(
+                        [
+                            html.H3(["Crypto Statistics"], className="text-center"),
+                            dbc.Table.from_dataframe(statistics_df, striped=True, bordered=True, hover=True),
+                        ]
                     ),
-
-    close_return_series = dcc.Graph(
-                            figure = {
-                                'data': [
-                                    {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
-                                ],
-                                'layout' : {
-                                    'title': str(crypto) + ' Close Return Series'
+    display_charts = dbc.Col(
+                        [
+                            html.H3(["Crypto Charts"], className="text-center"),
+                            dcc.Graph(
+                                figure = {
+                                    'data': [
+                                        {'x': df1['Date'], 'y': df1['Close'],'type':'line'}
+                                    ],
+                                    'layout' : {
+                                        'title': str(crypto) + ' Close Percentage Change'
+                                    }
                                 }
-                            },
-                            style = {
-                                'display':'inline-block',
-                                'width': '400px',
-                                'height': '400px'
-                            }
-                        )
+                            ),
+                            dcc.Graph(
+                                figure = {
+                                    'data': [
+                                        {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
+                                    ],
+                                    'layout' : {
+                                        'title': str(crypto) + ' Close Return Series'
+                                    }
+                                }
+                            ),
+                            dcc.Graph(
+                                figure = {
+                                    'data': [
+                                        {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
+                                    ],
+                                    'layout' : {
+                                        'title': str(crypto) + ' Close Return Series'
+                                    }
+                                }
+                            )
+                        ]
+                    )
 
-    ahv = dcc.Graph(
-            figure = {
-                'data': [
-                    {'x': ahv['Date'], 'y': ahv['Close'],'type':'line'}
-                ],
-                'layout' : {
-                    'title': str(crypto) + ' Annual Historical Volatility'
-                }
-            },
-            style = {
-                'display':'inline-block',
-                'width': '400px',
-                'height': '400px'
-            }
-        )
-
-    return close_pct_change, close_return_series, ahv
+    return display_stats, display_charts
 
 def load_data(ticker, startdate, enddate):
     start_date = startdate
@@ -505,33 +460,40 @@ def load_data(ticker, startdate, enddate):
 
 def chart_analysis(crypto, years):
     crypto_close = crypto['Close']
+    statistics = crypto_close.describe()
     
     # percentage change
     close_pct_change = crypto_close.pct_change()
     
+    skewness = close_pct_change.skew()
+    kurtosis = close_pct_change.kurtosis()
+    
     # calculating return series
     close_return_series = (1 + close_pct_change).cumprod() - 1
-    # annualized_returns = (1 + close_return_series.tail(1))**(1/years)-1
+    annualized_returns = (1 + close_return_series.tail(1))**(1/years)-1
     
     # calculating annual volatility
-    # volatility = np.sqrt(np.log(crypto_close / crypto_close.shift(1)).var()) * np.sqrt(252)
+    volatility = np.sqrt(np.log(crypto_close / crypto_close.shift(1)).var()) * np.sqrt(252)
     ahv = np.sqrt(252) * pd.DataFrame.rolling(np.log(crypto_close / crypto_close.shift(1)),window=20).std()
     
     # calculating sharpe ratio
     risk_free_rate = 0
     returns_ts = close_pct_change.dropna()
-    # avg_daily_returns = returns_ts.mean()
+    avg_daily_returns = returns_ts.mean()
     
     returns_ts['Risk Free Rate'] = risk_free_rate/252
-    # avg_rfr_ret = returns_ts['Risk Free Rate'].mean()
+    avg_rfr_ret = returns_ts['Risk Free Rate'].mean()
     returns_ts['Excess Returns'] = returns_ts - returns_ts['Risk Free Rate']
 
-    return close_pct_change, close_return_series, ahv
+    sharpe_ratio = ((avg_daily_returns - avg_rfr_ret) /returns_ts['Excess Returns'].std())*np.sqrt(252)
+
+    return close_pct_change, close_return_series, ahv, volatility, sharpe_ratio, annualized_returns, statistics, skewness, kurtosis
 
 def all_funcs(ticker, years, start_date, end_date):
     crypto = load_data(ticker, start_date, end_date)
     return chart_analysis(crypto, years)
 
+# this section controls callbacks for portfolio comparisons
 @app.callback(
     [Output('recommended_weights', 'children'),
     Output('gut_feel_weights', 'children'),
@@ -545,8 +507,6 @@ def all_funcs(ticker, years, start_date, end_date):
     State('end_analyze_date', 'value')],
     prevent_initial_call = True
 )
-
-
 def update_portfolio_comparison(clicks, gut_feel_data, start_date, end_date):
     recommended_weights = "get_reco_df(gut_feel_data)"
     gut_feel_weights = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
@@ -559,72 +519,286 @@ def update_portfolio_comparison(clicks, gut_feel_data, start_date, end_date):
     
     return recommended_weights, gut_feel_weights, recommended_returns, gut_feel_returns, recommended_sharpe, gut_feel_sharpe
 
+# this section controls callbacks for recommended portfolio
 @app.callback(
-    Output("portfolio_tables", "children"), 
-    [Input("volatility", "value")],prevent_initial_call=True)
+    [Output("slider_bar", "min"),
+    Output("slider_bar", "max"),
+    Output("slider_bar", "value"),
+    Output("portfolio_tables", "children")],
+    [Input("tabs", "active_tab"),
+    Input('slider_bar', 'value')],
+    [State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value')]
+)
+def switch_tab(at, slider_val, start_date, end_date):
+    print(slider_val)
+    n_portfolios = 10 ** 5
+    n_days = 365
+    # implement again later
+    # risky_assets = get_risky_assets()
+    risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
+    n_assets = len(risky_assets)
 
+    # Simulate random portfolio weights
+    np.random.seed(42)
+    weights = np.random.random(size=(n_portfolios, n_assets))
+    weights /=  np.sum(weights, axis=1)[:, np.newaxis]
 
+    if at == "best":
+        portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
+        max_sharpe_ind, max_sharpe_portf_weights = max_sharpe(portf_results_df, weights)
 
-# def change_volatility(vol):
-#     num_portfolios = N_PORTFOLIOS
-#     portfolios_consider = {}
-#     for i in range(num_portfolios):
-#         if portf_results_df['volatility'][i].round(2) == float(vol):
-#             portfolios_consider[i] = portf_results_df['returns'][i]
-#     portf_index_from_vol = max(portfolios_consider, key=portfolios_consider.get)
-#     portf_ind_from_vol_weights = weights[portf_index_from_vol]
-
-#     table_data = []
-#     for i in range(len(RISKY_ASSETS)):
-#         pair = [RISKY_ASSETS[i], portf_ind_from_vol_weights[i].round(2)]
-       
-#         table_data.append(pair)
-#     recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-#     fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-#     # fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
-#     #              cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
-#     return fig
-
-
-
-def change_volatility(vol_input):
-    if port_exists_vol_input(vol_input):
-        index_from_vol = portf_ind_from_vol(vol_input)
-        weights_from_vol = weights[index_from_vol]
         table_data = []
-        for i in range(len(RISKY_ASSETS)):
-            pair = [RISKY_ASSETS[i], weights_from_vol[i].round(2)]
+        for i in range(n_assets):
+            pair = [risky_assets[i], (max_sharpe_portf_weights[i]*100).round(2)]
             # print(pair)
             table_data.append(pair)
+
         recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
         fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-        # fig = go.Figure(data=[go.Table(header=dict(values=['Ticker','Weight (%)']),
-        #              cells=dict(values=[RISKY_ASSETS, (portf_ind_from_vol_weights*100).round(2)]))])
-        return fig
-    else:
-        print('Portfolio with a historical volatility of', vol_input, 'does not exist')
+        min_vol_value = 0
+        max_vol_value = 0
+        min_vol_value = 0
+        return min_vol_value, max_vol_value, min_vol_value, fig
 
+    elif at == "volatility":
+        portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
+        min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
 
-def port_exists_vol_input(vol_input):
-    for i in range(N_PORTFOLIOS):
+        if slider_val == 0:
+            index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
+            weights_from_vol = weights[index_from_vol]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
+                # print(pair)
+                table_data.append(pair)
+
+            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            return min_vol_value, max_vol_value, min_vol_value, fig
+
+        elif port_exists_vol_input(slider_val, n_portfolios, portf_results_df):
+            index_from_vol = portf_ind_from_vol(slider_val, n_portfolios, portf_results_df)
+            weights_from_vol = weights[index_from_vol]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
+                # print(pair)
+                table_data.append(pair)
+
+            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            return min_vol_value, max_vol_value, slider_val, fig
+
+        else:
+            print("does not exist")
+
+    elif at == "returns":
+        portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
+        min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
+        min_vol_ind = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
+        min_rtn_value, max_rtn_value = get_min_max_rtns(portf_results_df, min_vol_ind)
+
+        if slider_val == 0:    
+            index_from_rtn = portf_ind_from_rtn(max_rtn_value, n_portfolios, portf_results_df)
+            weights_from_rtn = weights[index_from_rtn]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = [risky_assets[i], (weights_from_rtn[i]*100).round(2)]
+                # print(pair)
+                table_data.append(pair)
+
+            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            return min_rtn_value, max_rtn_value, max_rtn_value, fig
+        
+        elif port_exists_rtn_input(slider_val, n_portfolios, portf_results_df):
+            index_from_rtn = portf_ind_from_rtn(slider_val, n_portfolios, portf_results_df)
+            weights_from_rtn = weights[index_from_rtn]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = [risky_assets[i], (weights_from_rtn[i]*100).round(2)]
+                # print(pair)
+                table_data.append(pair)
+
+            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            return min_rtn_value, max_rtn_value, slider_val, fig
+        
+        else:
+            print("does not exist")
+    
+    pass
+
+def get_risky_assets():
+    pass
+
+def return_mpt_df(start_date, end_date, n_portfolios, n_days, n_assets, risky_assets, weights):
+    prices_df = yf.download(risky_assets, start=start_date, end=end_date, adjusted=True)
+
+    # calculate annualized average returns and corresponding standard deviation
+    returns_df = prices_df['Close'].pct_change().dropna()
+    avg_returns = returns_df.mean() * n_days
+    cov_mat = returns_df.cov() * n_days
+
+    # RETURNS / EXPECTED RETURNS
+    portf_rtns = np.dot(weights, avg_returns)
+    
+    # VOLATILITY / STANDARD DEVIATION
+    portf_vol = []
+    for i in range(0, len(weights)):
+        portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
+
+    portf_vol = np.array(portf_vol)  
+
+    # SHARPE RATIO
+    portf_sharpe_ratio = portf_rtns / portf_vol
+
+    # Create a joint DataFrame with all data
+    portf_results_df = pd.DataFrame({'returns': portf_rtns,
+                                    'volatility': portf_vol,
+                                    'sharpe_ratio': portf_sharpe_ratio})
+
+    return portf_results_df 
+
+def max_sharpe(portf_results_df, weights):
+    max_sharpe_ind = np.argmax(portf_results_df.sharpe_ratio)
+    max_sharpe_portf_weights = weights[max_sharpe_ind]
+    
+    return max_sharpe_ind, max_sharpe_portf_weights
+
+def get_min_max_vol(portf_results_df):
+    min_vol_ind = np.argmin(portf_results_df.volatility)
+    min_vol_value = portf_results_df['volatility'][min_vol_ind].round(2)
+
+    max_vol_ind = np.argmax(portf_results_df.volatility)
+    max_vol_value = portf_results_df['volatility'][max_vol_ind].round(2)
+    return min_vol_value, max_vol_value
+
+def port_exists_vol_input(vol_input, n_portfolios, portf_results_df):
+    for i in range(n_portfolios):
         if portf_results_df['volatility'][i].round(2) == vol_input:
             return True
     return False
 
-def portf_ind_from_vol(vol_input):
+def portf_ind_from_vol(vol_input, n_portfolios, portf_results_df):
     portfolios_consider = {}
-    for i in range(N_PORTFOLIOS):
+    for i in range(n_portfolios):
         if portf_results_df['volatility'][i].round(2) == vol_input:
             portfolios_consider[i] = portf_results_df['returns'][i]
             found = True
+
+
     max_key = max(portfolios_consider, key=portfolios_consider.get)
     return max_key
 
+def get_min_max_rtns(portf_results_df, min_vol_ind):
+    min_rtn_value = portf_results_df['returns'][min_vol_ind].round(2)
 
+    max_rtn_ind = np.argmax(portf_results_df.returns)
+    max_rtn_value = portf_results_df['returns'][max_rtn_ind].round(2)
+    return min_rtn_value,max_rtn_value
 
+def port_exists_rtn_input(rtn_input, n_portfolios, portf_results_df):
+    for i in range(n_portfolios):
+        if portf_results_df['returns'][i].round(2) == rtn_input:
+            return True
+    return False
 
+def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
+    portfolios_consider = {}
+    for i in range(n_portfolios):
+        if portf_results_df['returns'][i].round(2) == rtn_input:
+            portfolios_consider[i] = portf_results_df['volatility'][i]
+    
+    min_key = min(portfolios_consider, key=portfolios_consider.get)
 
+    return min_key
 
+# this section controls callbacks for the sliders
+# @app.callback(
+#     Output("portfolio_tables", "children"),
+#     [Input("slider_bar", "value"),
+#     Input("tabs", "active_tab")],
+#     prevent_initial_call = True
+# )
+# def update_tables(value, tab):
+#     n_portfolios = 10 ** 5
+#     n_days = 365
+#     # implement again later
+#     # risky_assets = get_risky_assets()
+#     risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
+#     n_assets = len(risky_assets)
+
+#     # Simulate random portfolio weights
+#     np.random.seed(42)
+#     weights = np.random.random(size=(n_portfolios, n_assets))
+#     weights /=  np.sum(weights, axis=1)[:, np.newaxis]
+    
+#     if tab == "volatility":
+#         portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
+#         min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
+#         # slider = dcc.Slider(id="volatility_slider", min=min_vol_value, max=max_vol_value, step=0.01, value=min_vol_value)
+
+#         index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
+#         weights_from_vol = weights[index_from_vol]
+        
+#         # display tables
+#         table_data = []
+#         for i in range(n_assets):
+#             pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
+#             # print(pair)
+#             table_data.append(pair)
+
+#         recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+#         fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+        
+#         return min_vol_value, max_vol_value, min_vol_value, fig
+
+#     if tab == "returns":
+#         pass
+
+#     print(value)
+#     pass
+
+# def return_mpt_df(start_date, end_date, n_portfolios, n_days, n_assets, risky_assets, weights):
+    prices_df = yf.download(risky_assets, start=start_date, end=end_date, adjusted=True)
+
+    # calculate annualized average returns and corresponding standard deviation
+    returns_df = prices_df['Close'].pct_change().dropna()
+    avg_returns = returns_df.mean() * n_days
+    cov_mat = returns_df.cov() * n_days
+
+    # RETURNS / EXPECTED RETURNS
+    portf_rtns = np.dot(weights, avg_returns)
+    
+    # VOLATILITY / STANDARD DEVIATION
+    portf_vol = []
+    for i in range(0, len(weights)):
+        portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
+
+    portf_vol = np.array(portf_vol)  
+
+    # SHARPE RATIO
+    portf_sharpe_ratio = portf_rtns / portf_vol
+
+    # Create a joint DataFrame with all data
+    portf_results_df = pd.DataFrame({'returns': portf_rtns,
+                                    'volatility': portf_vol,
+                                    'sharpe_ratio': portf_sharpe_ratio})
 
 if __name__ == "__main__":
     app.run_server(debug=True)
