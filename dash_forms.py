@@ -153,11 +153,8 @@ app.layout = dbc.Container(
         ),
         dbc.Button("Generate Analysis Charts", color="dark", className="mr-1", id="submit_analysis_charts", n_clicks=0 ),
         # this section displays the analysis charts
-        dbc.Row(
-            [
-                html.Div(id="display_statistics", className="col-4"),
-                html.Div(id="display_charts", className="col-8"),
-            ],
+        dbc.Row(id="display_statistics", className="g-0"),
+        dbc.Row(id="display_charts",
             className="g-0",
             style={
                 'padding-top': 50,
@@ -230,6 +227,14 @@ app.layout = dbc.Container(
                                                     'height': 'auto',
                                                 },
                                             ),   
+                                            dbc.Alert(
+                                                id="alert_auto",
+                                                is_open=False,
+                                                duration=2000,
+                                                style={
+                                                    'padding-top': 20,
+                                                }
+                                            ),
                                         ],
                                     ),
                                 )
@@ -268,18 +273,41 @@ app.layout = dbc.Container(
                             id="tabs",
                             active_tab = "best"
                         ),
-                        dbc.Row(
-                            [
-                                dcc.Slider(id="slider_bar", min=0, max=10, step=0.01, value=0),
-                                # html.Div(id="slider_bar"),
-                                html.Div(id="portfolio_tables"),
-                            ],
-                            style={
-                                'text-align': 'center',
-                                'padding-top': 20
-                            },
+                        dbc.Spinner(
+                            dbc.Row(
+                                [
+                                    dcc.Slider(id="slider_bar", min=0, max=10, step=0.01, value=0),
+                                    html.Div(id="portfolio_metrics"),
+                                    html.Div(
+                                        [
+                                            dash_table.DataTable(
+                                                id='portfolio_tables',
+                                                columns=[{'name': 'Crypto', 'id': 'crypto', 'presentation': 'dropdown', 'deletable': False, 'renamable': False},
+                                                        {'name': 'weightage', 'id': 'weightage', 'deletable': False, 'renamable': False}
+                                                ],
+                                                data=[],
+                                                # editable=True,                  # allow user to edit data inside tabel
+                                                # row_deletable=True,             # allow user to delete rows
+                                                # sort_action="native",           # give user capability to sort columns
+                                                sort_mode="single",             # sort across 'multi' or 'single' columns
+                                                # filter_action="native",         # allow filtering of columns
+                                                page_action='none',             # render all of the data at once. No paging.
+                                                # style_table={'height': '200px', 'overflowY': 'auto'},
+                                                style_cell={'textAlign': 'center'},
+                                                style_data={
+                                                    'whiteSpace': 'normal',
+                                                    'height': 'auto',
+                                                },
+                                            ),   
+                                        ],
+                                    ),
+                                ],
+                                style={
+                                    'text-align': 'center',
+                                    'padding-top': 20
+                                },
+                            )
                         )
-                        
                     ]
                 )
             ],
@@ -293,51 +321,58 @@ app.layout = dbc.Container(
         dbc.Button("Generate Portfolio Comparison", color="dark", className="mr-1", id="submit_comparison", n_clicks=0),
         
         # weightage comparison
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(
-                        [],
-                        id="gut_feel_weights"
+        dbc.Spinner(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(
+                            [],
+                            id="gut_feel_weights"
+                        ),
+                        width=6,
                     ),
-                    width=6,
-                ),
-                dbc.Col(
-                    html.Div(
-                        [],
-                        id="recommended_weights"
+                    dbc.Col(
+                        html.Div(
+                            [],
+                            id="recommended_weights"
+                        ),
+                        width=6,
                     ),
-                    width=6,
-                ),
-            ]
+                ]
+            ),
         ),
+        
 
         # returns comparison
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(id="recommended_returns"),
-                    width=6,
-                ),
-                dbc.Col(
-                    html.Div(id="gut_feel_returns"),
-                    width=6,
-                ),
-            ]
+        dbc.Spinner(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(id="gut_feel_returns"),
+                        width=6,
+                    ),
+                    dbc.Col(
+                        html.Div(id="recommended_returns"),
+                        width=6,
+                    ),
+                ]
+            ),
         ),
 
         # sharpe ratio comparison
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(id="recommended_sharpe"),
-                    width=6,
-                ),
-                dbc.Col(
-                    html.Div(id="gut_feel_sharpe"),
-                    width=6,
-                ),
-            ]
+        dbc.Spinner(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(id="gut_feel_vol"),
+                        width=6,
+                    ),
+                    dbc.Col(
+                        html.Div(id="recommended_vol"),
+                        width=6,
+                    ),
+                ]
+            ),
         ),
         # dbc.Row(
         #     [
@@ -357,22 +392,71 @@ app.layout = dbc.Container(
 
 # this section controls callbacks for gut feel portfolio
 @app.callback(
-    Output("portfolio_table", 'data'),
+    [Output("portfolio_table", 'data'),
+    Output("alert_auto", 'children'),
+    Output("alert_auto", 'color'),
+    Output("alert_auto", 'is_open')],
     Input('submit_crypto', 'n_clicks'),
     [State('dropdown', 'value'),
     State('portfolio_weight', 'value'),
     State('portfolio_table', 'data'),
-    State('portfolio_table', 'columns')],
+    State('alert_auto', 'is_open')],
     prevent_initial_call = True
 )
-def add_row(n_clicks, crypto, weight, rows, columns):
+def add_row(n_clicks, crypto, weight, rows, is_open):
     if n_clicks == 1:
-        rows = [{'crypto': crypto, 'weightage': weight}]
-    else:
-        if len(rows)<=10:
-            rows.append({'crypto': crypto, 'weightage': weight})
+        if crypto == None:
+            text = "Please select your crypto"
+            color = "danger"
+        
+        elif weight == None:
+            text = "Please enter your weights for the crypto"
+            color = "danger"
 
-    return rows
+        else:
+            rows = [{'crypto': crypto, 'weightage': weight}]
+            text = "Your crypto has been added"
+            color = "success"
+        
+        is_open = True
+
+    else:
+        print(crypto)
+        print(weight)
+        if crypto == None:
+            text = "Please select your crypto"
+            color = "danger"   
+
+        elif weight == None:
+            text = "Please enter your weights for the crypto"
+            color = "danger"
+
+        elif len(rows) < 10:
+            # print(rows)
+            cryptos_list = []
+            weights = 0
+            for i in range(len(rows)):
+                cryptos_list.append(rows[i]["crypto"])
+                weights += rows[i]["weightage"]
+
+            print(weight)
+
+            if crypto in cryptos_list:
+                text = "You have added this crypto before"
+                color = "danger"
+
+            elif weights + weight > 100:
+                text = "Your total weightage is more than 100"
+                color = "danger"
+
+            else:
+                rows.append({'crypto': crypto, 'weightage': weight})
+                text = "Your crypto has been added"
+                color = "success"
+            
+        is_open = True
+
+    return rows, text, color, is_open
 
 # this section controls callbacks for chart analysis
 @app.callback(
@@ -390,9 +474,15 @@ def update_charts(clicks, crypto, start_date, end_date):
     years = 1
     close_pct_change, close_return_series, ahv, volatility, sharpe_ratio, annualized_returns, statistics, skewness, kurtosis = all_funcs(ticker, years, start_date, end_date)
 
-    stats_dict = {"labels": ["Volatility", "Sharpe Ratio", "Annualized Returns", "Skewness", "Kurtosis"], "values": [volatility, sharpe_ratio, annualized_returns, skewness, kurtosis]}
+    stats_dict = {
+        "Volatility": volatility,
+        "Sharpe Ratio": sharpe_ratio,
+        "Annualized Returns": annualized_returns,
+        "Skewness": skewness,
+        "Kurtosis": kurtosis,
+    }
 
-    statistics_df = pd.DataFrame(stats_dict, index=stats_dict["labels"])
+    statistics_df = pd.DataFrame(stats_dict)
     # statistics_df = statistics_df.reset_index()
 
     close_pct_change = pd.DataFrame(close_pct_change)
@@ -406,13 +496,13 @@ def update_charts(clicks, crypto, start_date, end_date):
     
     df1 = close_pct_change
 
-    display_stats = dbc.Col(
+    display_stats = html.Div(
                         [
                             html.H3(["Crypto Statistics"], className="text-center"),
                             dbc.Table.from_dataframe(statistics_df, striped=True, bordered=True, hover=True),
                         ]
                     ),
-    display_charts = dbc.Col(
+    display_charts = html.Div(
                         [
                             html.H3(["Crypto Charts"], className="text-center"),
                             dcc.Graph(
@@ -499,39 +589,120 @@ def all_funcs(ticker, years, start_date, end_date):
     Output('gut_feel_weights', 'children'),
     Output('recommended_returns', 'children'),
     Output('gut_feel_returns', 'children'),
-    Output('recommended_sharpe', 'children'),
-    Output('gut_feel_sharpe', 'children')],
+    Output('recommended_vol', 'children'),
+    Output('gut_feel_vol', 'children')],
     Input('submit_comparison', 'n_clicks'),
     [State('portfolio_table', 'data'),
+    State('portfolio_tables', 'data'),
     State('start_analyze_date', 'value'),
     State('end_analyze_date', 'value')],
     prevent_initial_call = True
 )
-def update_portfolio_comparison(clicks, gut_feel_data, start_date, end_date):
-    recommended_weights = "get_reco_df(gut_feel_data)"
-    gut_feel_weights = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
-
-    recommended_returns = ""
-    gut_feel_returns = ""
-
-    recommended_sharpe = ""
-    gut_feel_sharpe = ""
+def update_portfolio_comparison(clicks, gut_feel_data, reco_data, start_date, end_date):
+    # print(reco_data)
+    reco_tickers = []
+    reco_weights = []
+    for i in range(len(reco_data)):
+        reco_tickers.append(reco_data[i]['crypto'])
+        reco_weights.append(reco_data[i]['weightage'])
     
-    return recommended_weights, gut_feel_weights, recommended_returns, gut_feel_returns, recommended_sharpe, gut_feel_sharpe
+    gut_feel_tickers = []
+    gut_feel_weights = []
+    for k in range(len(gut_feel_data)):
+        gut_feel_tickers.append(gut_feel_data[k]['crypto'])
+        gut_feel_weights.append(gut_feel_data[k]['weightage'])
+    
+    # print(gut_feel_tickers)
+    # print(gut_feel_weights)
+
+    recommended_pie = dcc.Graph(figure=px.pie(reco_data, names='crypto', values='weightage'))
+    gut_feel_pie = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
+
+    recommended_returns_series = get_rtn_series_df(reco_tickers, reco_weights, start_date, end_date)
+    recommended_returns_df = recommended_returns_series.to_frame().reset_index()
+    recommended_returns = dcc.Graph(
+                                figure = {
+                                    'data': [
+                                        {'x': recommended_returns_df['Date'], 'y': recommended_returns_df[0],'type':'line'}
+                                    ],
+                                    'layout' : {
+                                        'title': 'Recommended Portfolio Returns'
+                                    }
+                                }
+                            )
+
+    gut_feel_returns_series = get_rtn_series_df(gut_feel_tickers, gut_feel_weights, start_date, end_date)
+    gut_feel_returns_df = gut_feel_returns_series.to_frame().reset_index()
+    gut_feel_returns = dcc.Graph(
+                                figure = {
+                                    'data': [
+                                        {'x': gut_feel_returns_df['Date'], 'y': gut_feel_returns_df[0],'type':'line'}
+                                    ],
+                                    'layout' : {
+                                        'title': 'Selected Portfolio Returns'
+                                    }
+                                }
+                            )
+
+    recommended_vol_df = get_rolling_volatility_df(recommended_returns_series, 20).to_frame().reset_index()
+    recommended_vol = dcc.Graph(
+                            figure = {
+                                'data': [
+                                    {'x': recommended_vol_df['Date'], 'y': recommended_vol_df[0],'type':'line'}
+                                ],
+                                'layout' : {
+                                    'title': 'Recommended Portfolio Volatility'
+                                }
+                            }
+                        )
+    # recommended_vol = ""
+
+    
+    gut_feel_vol_df = get_rolling_volatility_df(gut_feel_returns_series, 20).to_frame().reset_index()
+    gut_feel_vol = dcc.Graph(
+                        figure = {
+                            'data': [
+                                {'x': gut_feel_vol_df['Date'], 'y': gut_feel_vol_df[0],'type':'line'}
+                            ],
+                            'layout' : {
+                                'title': 'Selected Portfolio Volatility'
+                            }
+                        }
+                    )
+    
+    # gut_feel_vol = ""
+    
+    return recommended_pie, gut_feel_pie, recommended_returns, gut_feel_returns, recommended_vol, gut_feel_vol
+
+def get_rtn_series_df(tickers, weights, start_date, end_date):
+    prices_df = yf.download(tickers, start=start_date, end=end_date, adjusted=True)
+    close_df = prices_df['Close']
+    rtn_series = (close_df.pct_change()+1).cumprod() - 1 
+    # print(len(weights))
+    # print(len(rtn_series))
+    weighted_rtn_series = weights * rtn_series
+    final_rtn_series = weighted_rtn_series.sum(axis=1)
+    
+    return final_rtn_series
+
+def get_rolling_volatility_df(rtn_series, rolling_window):
+    return pd.DataFrame.rolling(np.log((rtn_series+1)/(rtn_series+1).shift(1)),window=rolling_window).std() * np.sqrt(365)
 
 # this section controls callbacks for recommended portfolio
 @app.callback(
     [Output("slider_bar", "min"),
     Output("slider_bar", "max"),
     Output("slider_bar", "value"),
-    Output("portfolio_tables", "children")],
+    Output("portfolio_tables", "data"),
+    Output("portfolio_metrics", "children")],
     [Input("tabs", "active_tab"),
     Input('slider_bar', 'value')],
     [State('start_analyze_date', 'value'),
     State('end_analyze_date', 'value')]
 )
 def switch_tab(at, slider_val, start_date, end_date):
-    print(slider_val)
+    # print(slider_val)
+    # print(at)
     n_portfolios = 10 ** 5
     n_days = 365
     # implement again later
@@ -544,104 +715,123 @@ def switch_tab(at, slider_val, start_date, end_date):
     weights = np.random.random(size=(n_portfolios, n_assets))
     weights /=  np.sum(weights, axis=1)[:, np.newaxis]
 
+    # for best sharpe ratio
     if at == "best":
         portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
         max_sharpe_ind, max_sharpe_portf_weights = max_sharpe(portf_results_df, weights)
 
         table_data = []
         for i in range(n_assets):
-            pair = [risky_assets[i], (max_sharpe_portf_weights[i]*100).round(2)]
+            pair = {'crypto': risky_assets[i], 'weightage': (max_sharpe_portf_weights[i]*100).round(2)}
             # print(pair)
             table_data.append(pair)
 
-        recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-        fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+        metrics = portf_results_df.loc[max_sharpe_ind]
+        # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+        recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+        
+        fig  = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+        # fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+        
         min_vol_value = 0
         max_vol_value = 0
         min_vol_value = 0
-        return min_vol_value, max_vol_value, min_vol_value, fig
+        return min_vol_value, max_vol_value, min_vol_value, table_data, fig
 
+    # adjusting volatility
     elif at == "volatility":
         portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
         min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
 
-        if slider_val == 0:
-            index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
-            weights_from_vol = weights[index_from_vol]
-            
-            # display tables
-            table_data = []
-            for i in range(n_assets):
-                pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
-                # print(pair)
-                table_data.append(pair)
-
-            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-            
-            return min_vol_value, max_vol_value, min_vol_value, fig
-
-        elif port_exists_vol_input(slider_val, n_portfolios, portf_results_df):
+        if port_exists_vol_input(slider_val, n_portfolios, portf_results_df):
             index_from_vol = portf_ind_from_vol(slider_val, n_portfolios, portf_results_df)
             weights_from_vol = weights[index_from_vol]
             
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]*100).round(2)}
+                # print(pair)
+                table_data.append(pair)
+            
+            metrics = portf_results_df.loc[index_from_vol]
+            # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+
+            fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+            # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            
+            return min_vol_value, max_vol_value, slider_val, table_data, fig
+
+        else:
+            index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
+            weights_from_vol = weights[index_from_vol]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]*100).round(2)}
                 # print(pair)
                 table_data.append(pair)
 
-            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            metrics = portf_results_df.loc[index_from_vol]
+            # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+
+            fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+            # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
-            return min_vol_value, max_vol_value, slider_val, fig
+            return min_vol_value, max_vol_value, min_vol_value, table_data, fig
 
-        else:
-            print("does not exist")
-
+    # adjusting returns
     elif at == "returns":
         portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
         min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
         min_vol_ind = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
         min_rtn_value, max_rtn_value = get_min_max_rtns(portf_results_df, min_vol_ind)
 
-        if slider_val == 0:    
-            index_from_rtn = portf_ind_from_rtn(max_rtn_value, n_portfolios, portf_results_df)
-            weights_from_rtn = weights[index_from_rtn]
-            
-            # display tables
-            table_data = []
-            for i in range(n_assets):
-                pair = [risky_assets[i], (weights_from_rtn[i]*100).round(2)]
-                # print(pair)
-                table_data.append(pair)
-
-            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-            
-            return min_rtn_value, max_rtn_value, max_rtn_value, fig
-        
-        elif port_exists_rtn_input(slider_val, n_portfolios, portf_results_df):
+        if port_exists_rtn_input(slider_val, n_portfolios, portf_results_df):
             index_from_rtn = portf_ind_from_rtn(slider_val, n_portfolios, portf_results_df)
             weights_from_rtn = weights[index_from_rtn]
             
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = [risky_assets[i], (weights_from_rtn[i]*100).round(2)]
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]*100).round(2)}
                 # print(pair)
                 table_data.append(pair)
 
-            recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            metrics = portf_results_df.loc[index_from_rtn]
+            # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+
+            fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+            # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
-            return min_rtn_value, max_rtn_value, slider_val, fig
-        
-        else:
-            print("does not exist")
-    
-    pass
+            return min_rtn_value, max_rtn_value, slider_val, table_data, fig
+
+        else: 
+            index_from_rtn = portf_ind_from_rtn(max_rtn_value, n_portfolios, portf_results_df)
+            weights_from_rtn = weights[index_from_rtn]
+            
+            # display tables
+            table_data = []
+            for i in range(n_assets):
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]*100).round(2)}
+                # print(pair)
+                table_data.append(pair)
+
+            metrics = portf_results_df.loc[index_from_rtn]
+            # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
+            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+
+            fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+            # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
+            
+            # print(min_rtn_value)
+            # print(max_rtn_value)
+            return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig
 
 def get_risky_assets():
     pass
@@ -727,78 +917,6 @@ def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
     min_key = min(portfolios_consider, key=portfolios_consider.get)
 
     return min_key
-
-# this section controls callbacks for the sliders
-# @app.callback(
-#     Output("portfolio_tables", "children"),
-#     [Input("slider_bar", "value"),
-#     Input("tabs", "active_tab")],
-#     prevent_initial_call = True
-# )
-# def update_tables(value, tab):
-#     n_portfolios = 10 ** 5
-#     n_days = 365
-#     # implement again later
-#     # risky_assets = get_risky_assets()
-#     risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
-#     n_assets = len(risky_assets)
-
-#     # Simulate random portfolio weights
-#     np.random.seed(42)
-#     weights = np.random.random(size=(n_portfolios, n_assets))
-#     weights /=  np.sum(weights, axis=1)[:, np.newaxis]
-    
-#     if tab == "volatility":
-#         portf_results_df = return_mpt_df(start_date,end_date, n_portfolios, n_days, n_assets, risky_assets, weights)
-#         min_vol_value, max_vol_value = get_min_max_vol(portf_results_df)
-#         # slider = dcc.Slider(id="volatility_slider", min=min_vol_value, max=max_vol_value, step=0.01, value=min_vol_value)
-
-#         index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
-#         weights_from_vol = weights[index_from_vol]
-        
-#         # display tables
-#         table_data = []
-#         for i in range(n_assets):
-#             pair = [risky_assets[i], (weights_from_vol[i]*100).round(2)]
-#             # print(pair)
-#             table_data.append(pair)
-
-#         recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-#         fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-        
-#         return min_vol_value, max_vol_value, min_vol_value, fig
-
-#     if tab == "returns":
-#         pass
-
-#     print(value)
-#     pass
-
-# def return_mpt_df(start_date, end_date, n_portfolios, n_days, n_assets, risky_assets, weights):
-    prices_df = yf.download(risky_assets, start=start_date, end=end_date, adjusted=True)
-
-    # calculate annualized average returns and corresponding standard deviation
-    returns_df = prices_df['Close'].pct_change().dropna()
-    avg_returns = returns_df.mean() * n_days
-    cov_mat = returns_df.cov() * n_days
-
-    # RETURNS / EXPECTED RETURNS
-    portf_rtns = np.dot(weights, avg_returns)
-    
-    # VOLATILITY / STANDARD DEVIATION
-    portf_vol = []
-    for i in range(0, len(weights)):
-        portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
-
-    portf_vol = np.array(portf_vol)  
-
-    # SHARPE RATIO
-    portf_sharpe_ratio = portf_rtns / portf_vol
-
-    # Create a joint DataFrame with all data
-    portf_results_df = pd.DataFrame({'returns': portf_rtns,
-                                    'volatility': portf_vol,
-                                    'sharpe_ratio': portf_sharpe_ratio})
 
 if __name__ == "__main__":
     app.run_server(debug=True)
