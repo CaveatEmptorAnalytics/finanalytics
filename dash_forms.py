@@ -722,7 +722,7 @@ def switch_tab(at, slider_val, start_date, end_date):
 
         table_data = []
         for i in range(n_assets):
-            pair = {'crypto': risky_assets[i], 'weightage': (max_sharpe_portf_weights[i]*100).round(2)}
+            pair = {'crypto': risky_assets[i], 'weightage': (max_sharpe_portf_weights[i]).round(2)}
             # print(pair)
             table_data.append(pair)
 
@@ -750,7 +750,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]*100).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]).round(2)}
                 # print(pair)
                 table_data.append(pair)
             
@@ -771,7 +771,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]*100).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]).round(2)}
                 # print(pair)
                 table_data.append(pair)
 
@@ -798,7 +798,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]*100).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]).round(2)}
                 # print(pair)
                 table_data.append(pair)
 
@@ -818,7 +818,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]*100).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]).round(2)}
                 # print(pair)
                 table_data.append(pair)
 
