@@ -19,7 +19,7 @@ today = datetime.today().strftime('%Y-%m-%d')
 
 from dash.dependencies import Input, Output, State
 
-tickers = ['BTC-USD','ETH-USD','HEX-USD','ADA-USD','BNB-USD','XRP-USD','SOL1-USD','DOT1-USD','USDC-USD',
+TICKERS = ['BTC-USD','ETH-USD','HEX-USD','ADA-USD','BNB-USD','XRP-USD','SOL1-USD','DOT1-USD','USDC-USD',
            'DOGE-USD','LUNA1-USD','UNI3-USD','LTC-USD','AVAX-USD','SHIB-USD','LINK-USD','BCH-USD','ALGO-USD',
            'MATIC-USD','XLM-USD','FIL-USD','ICP1-USD','ATOM1-USD','VET-USD','AXS-USD','ETC-USD','TRX-USD',
            'FTT1-USD','DAI1-USD','THETA-USD','XTZ-USD','FTM-USD','HBAR-USD','XMR-USD','CRO-USD','EGLD-USD',
@@ -141,26 +141,39 @@ app.layout = dbc.Container(
                         dcc.Dropdown(
                                 id="crypto_dropdown",
                                 options=[{"value": x, "label": x} 
-                                            for x in tickers]
+                                            for x in TICKERS]
                             ),
                     ],
                     width=4,
                     style={
-                        'padding': 10
+                        'padding-top': 50,
+                        'padding-bottom': 10
                     },
                 ),
             ],
         ),
         dbc.Button("Generate Analysis Charts", color="dark", className="mr-1", id="submit_analysis_charts", n_clicks=0 ),
+
         # this section displays the analysis charts
         dbc.Row(id="display_statistics", className="g-0"),
-        dbc.Row(id="display_charts",
+        html.Div(id="display_charts",
             className="g-0",
             style={
                 'padding-top': 50,
                 'padding-bottom': 100
             },
         ),
+
+        dbc.Button("Toggle View MPT Chart", color="dark", className="mr-1", id="toggle_mpt", n_clicks=0 ),
+        dbc.Spinner(
+            html.Div(
+                id="mpt_chart",
+                style={
+                    'padding-bottom': 100
+                },
+            ),
+        ),
+
         dbc.Row(
             [
                 # this section adds their gut feel portfolio
@@ -175,7 +188,7 @@ app.layout = dbc.Container(
                                         dcc.Dropdown(
                                             id="dropdown",
                                             options=[{"value": x, "label": x} 
-                                                    for x in tickers]
+                                                    for x in TICKERS]
                                         ),
                                     ],
                                     className="col-4"
@@ -445,7 +458,7 @@ def add_row(n_clicks, crypto, weight, rows, is_open):
                 text = "You have added this crypto before"
                 color = "danger"
 
-            elif weights + weight > 100:
+            elif weights + weight > 1:
                 text = "Your total weightage is more than 100"
                 color = "danger"
 
@@ -502,38 +515,44 @@ def update_charts(clicks, crypto, start_date, end_date):
                             dbc.Table.from_dataframe(statistics_df, striped=True, bordered=True, hover=True),
                         ]
                     ),
-    display_charts = html.Div(
+    display_charts = dbc.Row(
                         [
                             html.H3(["Crypto Charts"], className="text-center"),
-                            dcc.Graph(
-                                figure = {
-                                    'data': [
-                                        {'x': df1['Date'], 'y': df1['Close'],'type':'line'}
-                                    ],
-                                    'layout' : {
-                                        'title': str(crypto) + ' Close Percentage Change'
+                            dbc.Col(
+                                dcc.Graph(
+                                    figure = {
+                                        'data': [
+                                            {'x': df1['Date'], 'y': df1['Close'],'type':'line'}
+                                        ],
+                                        'layout' : {
+                                            'title': str(crypto) + ' Close Percentage Change'
+                                        }
                                     }
-                                }
+                                ),
                             ),
-                            dcc.Graph(
-                                figure = {
-                                    'data': [
-                                        {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
-                                    ],
-                                    'layout' : {
-                                        'title': str(crypto) + ' Close Return Series'
+                            dbc.Col(
+                                dcc.Graph(
+                                    figure = {
+                                        'data': [
+                                            {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
+                                        ],
+                                        'layout' : {
+                                            'title': str(crypto) + ' Close Return Series'
+                                        }
                                     }
-                                }
+                                ),
                             ),
-                            dcc.Graph(
-                                figure = {
-                                    'data': [
-                                        {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
-                                    ],
-                                    'layout' : {
-                                        'title': str(crypto) + ' Close Return Series'
+                            dbc.Col(
+                                dcc.Graph(
+                                    figure = {
+                                        'data': [
+                                            {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
+                                        ],
+                                        'layout' : {
+                                            'title': str(crypto) + ' Close Return Series'
+                                        }
                                     }
-                                }
+                                )
                             )
                         ]
                     )
@@ -563,7 +582,7 @@ def chart_analysis(crypto, years):
     annualized_returns = (1 + close_return_series.tail(1))**(1/years)-1
     
     # calculating annual volatility
-    volatility = np.sqrt(np.log(crypto_close / crypto_close.shift(1)).var()) * np.sqrt(252)
+    volatility = np.sqrt(np.log(crypto_close / crypto_close.shift(1)).var()) * np.sqrt(365)
     ahv = np.sqrt(252) * pd.DataFrame.rolling(np.log(crypto_close / crypto_close.shift(1)),window=20).std()
     
     # calculating sharpe ratio
@@ -582,6 +601,176 @@ def chart_analysis(crypto, years):
 def all_funcs(ticker, years, start_date, end_date):
     crypto = load_data(ticker, start_date, end_date)
     return chart_analysis(crypto, years)
+
+# this section controls callbacks for mpt chart
+@app.callback(
+    Output("mpt_chart", "children"),
+    Input("toggle_mpt", "n_clicks"),
+    [State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value')],
+    prevent_initial_call = True
+)
+def display_mpt(n_clicks, start_date, end_date):
+    # print(fig)
+    if n_clicks % 2 != 0:
+        top_10 = get_top_10(start_date, end_date)
+        # top_10 = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
+        n_portfolios = 10 ** 5
+        n_assets = len(top_10)
+
+        prices_df = yf.download(top_10, start=start_date, end=end_date, adjusted=True)
+
+        # calculate annualized average returns and corresponding standard deviation
+        returns_df = prices_df['Close'].pct_change().dropna()
+
+        avg_returns = returns_df.mean() * 365
+        cov_mat = returns_df.cov() * 365
+
+        # Simulate random portfolio weights
+        np.random.seed(42)
+        weights = np.random.random(size=(n_portfolios, n_assets))
+        weights /=  np.sum(weights, axis=1)[:, np.newaxis]
+
+        # Calculate portfolio metrics
+        portf_rtns = np.dot(weights, avg_returns)
+
+        portf_vol = []
+        for i in range(0, len(weights)):
+            portf_vol.append(np.sqrt(np.dot(weights[i].T, np.dot(cov_mat, weights[i]))))
+
+        portf_vol = np.array(portf_vol)  
+
+        portf_sharpe_ratio = portf_rtns / portf_vol
+
+        # Create a joint DataFrame with all data
+        portf_results_df = pd.DataFrame({'returns': portf_rtns,
+                                        'volatility': portf_vol,
+                                        'sharpe_ratio': portf_sharpe_ratio})
+
+        print(portf_results_df.head(5))
+
+        fig = dcc.Graph(
+            figure = px.scatter(portf_results_df, x="volatility", y="returns", color='sharpe_ratio')
+        ) 
+        
+    else:
+        # fig = dcc.Graph(
+        #     figure = {}
+        # )
+        fig = html.Div()
+
+    return fig
+
+def get_top_10(start_date, end_date):
+    prices_df = yf.download(TICKERS, start=start_date, end=end_date, adjusted=True)
+    vol_df = prices_df['Volume']
+
+    nan_value = float("NaN")
+    vol_df.replace(0, nan_value, inplace=True)
+    vol_df = vol_df.dropna(1)
+    
+    mean_vol = vol_df.mean(axis=0)
+    mean_vol_df = pd.DataFrame(mean_vol, columns = ['Average Volume'])
+
+    top100_avg_vol = mean_vol_df.nlargest(100, 'Average Volume')
+    tickers = top100_avg_vol.index.values
+
+    sharpe_ratio_set = {"ticker" : (tickers) , "Volatility" : ([]),'Annualised Returns' : ([]),'Sharpe Ratio' : ([])}
+
+    risk_free_rate = 0
+    years = 1
+
+    for ticker in tickers:
+        panel_data = yf.download(ticker, start=start_date, end=end_date, adjusted=True)
+        
+        #close price series
+        close_df = panel_data['Close']
+        
+        #calculate close return series
+        close_pct_change = close_df.pct_change()
+        close_return_series = ((1 + close_pct_change).cumprod() - 1)
+        close_returns_df = close_return_series.to_frame()
+
+        #calculate annualised returns
+        annualized_returns_df = (1 + close_returns_df.tail(1))**(1/years)-1
+        annualised_returns = annualized_returns_df.iloc[0][0]
+        sharpe_ratio_set['Annualised Returns'].append(annualised_returns)
+        
+        #calculate volatility
+        volatility = np.sqrt(np.log(close_df/close_df.shift(1)).var()) * np.sqrt(365)
+        sharpe_ratio_set['Volatility'].append(volatility)
+
+        #calculate annualised historical volatility
+        annualised_historical_volatility = np.sqrt(365) * pd.DataFrame.rolling(np.log(close_df / close_df.shift(1)),window=20).std()
+    
+        #calculate sharpe ratio
+        returns_ts = close_pct_change.dropna()
+        returns_ts = returns_ts.to_frame()
+        avg_daily_returns = returns_ts['Close'].mean()
+        returns_ts['Risk Free Rate'] = risk_free_rate/365
+        avg_rfr_ret = returns_ts['Risk Free Rate'].mean()
+        returns_ts['Excess Returns'] = returns_ts['Close'] - returns_ts['Risk Free Rate']
+        sharpe_ratio = ((avg_daily_returns - avg_rfr_ret) /(returns_ts['Excess Returns'].std()))*np.sqrt(365)
+        sharpe_ratio_set['Sharpe Ratio'].append(sharpe_ratio) 
+
+    sharpe_ratio_df = pd.DataFrame(sharpe_ratio_set).sort_values(by='Sharpe Ratio',ascending=False)
+    positive_sharpe_ratio_df = sharpe_ratio_df[sharpe_ratio_df['Sharpe Ratio'] > 0]
+    positive_sharpe_ratio_df = positive_sharpe_ratio_df.reset_index()
+
+    first_ticker = positive_sharpe_ratio_df['ticker'].values[0]
+    top_list = []
+    for i in positive_sharpe_ratio_df['ticker'].values:
+        top_list.append(i)
+
+    confirmed_top_list = top_list
+    top_df = yf.download(top_list, start=start_date, end=end_date, adjusted=True)
+    #get return series of top 10 sharpe ratio
+    top_close = top_df['Close']
+    close_pct_change = top_close.pct_change()
+    close_return_df = ((1 + close_pct_change).cumprod() - 1)
+    close_return_df.fillna(0,inplace = True)
+    corr_matrix = close_return_df.corr()
+
+    top_pairs = get_top_abs_correlations(close_return_df, 10000)
+    top_pairs = pd.DataFrame(top_pairs, columns = ['Correlation'])
+    removed_top_pairs = top_pairs[top_pairs['Correlation']>0.9]
+    removed_top_pairs = removed_top_pairs.index
+
+    removed_list = []
+    confirmed_list = []
+    for ticker in top_list:
+        for i in removed_top_pairs:
+            ticker1 = i[0]
+            ticker2 = i[1]
+            if ticker == ticker1 and ticker2 not in removed_list:
+                removed_list.append(ticker2)
+            if ticker == ticker2 and ticker1 not in removed_list:
+                removed_list.append(ticker1)
+        if ticker not in removed_list:
+            confirmed_list.append(ticker)
+        top_list = [crypto for crypto in top_list if crypto not in removed_list] 
+        top_list = [crypto for crypto in top_list if crypto not in confirmed_list] 
+
+    if confirmed_top_list[0] not in confirmed_list:
+        confirmed_list = list(confirmed_top_list[0]) + confirmed_list
+
+    final_list = confirmed_list[:10]
+    return final_list
+
+def get_redundant_pairs(df):
+    '''Get diagonal and lower triangular pairs of correlation matrix'''
+    pairs_to_drop = set()
+    cols = df.columns
+    for i in range(0, df.shape[1]):
+        for j in range(0, i+1):
+            pairs_to_drop.add((cols[i], cols[j]))
+    return pairs_to_drop
+
+def get_top_abs_correlations(df, n=35):
+    au_corr = df.corr().unstack()
+    labels_to_drop = get_redundant_pairs(df)
+    au_corr = au_corr.drop(labels=labels_to_drop).sort_values(ascending=False)
+    return au_corr[0:n]
 
 # this section controls callbacks for portfolio comparisons
 @app.callback(
@@ -706,8 +895,8 @@ def switch_tab(at, slider_val, start_date, end_date):
     n_portfolios = 10 ** 5
     n_days = 365
     # implement again later
-    # risky_assets = get_risky_assets()
-    risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
+    risky_assets = get_risky_assets(start_date, end_date)
+    # risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
     n_assets = len(risky_assets)
 
     # Simulate random portfolio weights
@@ -722,7 +911,7 @@ def switch_tab(at, slider_val, start_date, end_date):
 
         table_data = []
         for i in range(n_assets):
-            pair = {'crypto': risky_assets[i], 'weightage': (max_sharpe_portf_weights[i]).round(2)}
+            pair = {'crypto': risky_assets[i], 'weightage': max_sharpe_portf_weights[i].round(2)}
             # print(pair)
             table_data.append(pair)
 
@@ -750,7 +939,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': weights_from_vol[i].round(2)}
                 # print(pair)
                 table_data.append(pair)
             
@@ -771,7 +960,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_vol[i]).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': weights_from_vol[i].round(2)}
                 # print(pair)
                 table_data.append(pair)
 
@@ -798,7 +987,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': weights_from_rtn[i].round(2)}
                 # print(pair)
                 table_data.append(pair)
 
@@ -818,7 +1007,7 @@ def switch_tab(at, slider_val, start_date, end_date):
             # display tables
             table_data = []
             for i in range(n_assets):
-                pair = {'crypto': risky_assets[i], 'weightage': (weights_from_rtn[i]).round(2)}
+                pair = {'crypto': risky_assets[i], 'weightage': weights_from_rtn[i].round(2)}
                 # print(pair)
                 table_data.append(pair)
 
@@ -833,8 +1022,101 @@ def switch_tab(at, slider_val, start_date, end_date):
             # print(max_rtn_value)
             return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig
 
-def get_risky_assets():
-    pass
+def get_risky_assets(start_date, end_date):
+    prices_df = yf.download(TICKERS, start=start_date, end=end_date, adjusted=True)
+    vol_df = prices_df['Volume']
+
+    nan_value = float("NaN")
+    vol_df.replace(0, nan_value, inplace=True)
+    vol_df = vol_df.dropna(1)
+    
+    mean_vol = vol_df.mean(axis=0)
+    mean_vol_df = pd.DataFrame(mean_vol, columns = ['Average Volume'])
+
+    top100_avg_vol = mean_vol_df.nlargest(100, 'Average Volume')
+    tickers = top100_avg_vol.index.values
+
+    sharpe_ratio_set = {"ticker" : (tickers) , "Volatility" : ([]),'Annualised Returns' : ([]),'Sharpe Ratio' : ([])}
+
+    risk_free_rate = 0
+    years = 1
+
+    for ticker in tickers:
+        panel_data = yf.download(ticker, start=start_date, end=end_date, adjusted=True)
+        
+        #close price series
+        close_df = panel_data['Close']
+        
+        #calculate close return series
+        close_pct_change = close_df.pct_change()
+        close_return_series = ((1 + close_pct_change).cumprod() - 1)
+        close_returns_df = close_return_series.to_frame()
+
+        #calculate annualised returns
+        annualized_returns_df = (1 + close_returns_df.tail(1))**(1/years)-1
+        annualised_returns = annualized_returns_df.iloc[0][0]
+        sharpe_ratio_set['Annualised Returns'].append(annualised_returns)
+        
+        #calculate volatility
+        volatility = np.sqrt(np.log(close_df/close_df.shift(1)).var()) * np.sqrt(365)
+        sharpe_ratio_set['Volatility'].append(volatility)
+
+        #calculate annualised historical volatility
+        annualised_historical_volatility = np.sqrt(365) * pd.DataFrame.rolling(np.log(close_df / close_df.shift(1)),window=20).std()
+    
+        #calculate sharpe ratio
+        returns_ts = close_pct_change.dropna()
+        returns_ts = returns_ts.to_frame()
+        avg_daily_returns = returns_ts['Close'].mean()
+        returns_ts['Risk Free Rate'] = risk_free_rate/365
+        avg_rfr_ret = returns_ts['Risk Free Rate'].mean()
+        returns_ts['Excess Returns'] = returns_ts['Close'] - returns_ts['Risk Free Rate']
+        sharpe_ratio = ((avg_daily_returns - avg_rfr_ret) /(returns_ts['Excess Returns'].std()))*np.sqrt(365)
+        sharpe_ratio_set['Sharpe Ratio'].append(sharpe_ratio) 
+
+    sharpe_ratio_df = pd.DataFrame(sharpe_ratio_set).sort_values(by='Sharpe Ratio',ascending=False)
+    positive_sharpe_ratio_df = sharpe_ratio_df[sharpe_ratio_df['Sharpe Ratio'] > 0]
+    positive_sharpe_ratio_df = positive_sharpe_ratio_df.reset_index()
+
+    first_ticker = positive_sharpe_ratio_df['ticker'].values[0]
+    top_list = []
+    for i in positive_sharpe_ratio_df['ticker'].values:
+        top_list.append(i)
+
+    confirmed_top_list = top_list
+    top_df = yf.download(top_list, start=start_date, end=end_date, adjusted=True)
+    #get return series of top 10 sharpe ratio
+    top_close = top_df['Close']
+    close_pct_change = top_close.pct_change()
+    close_return_df = ((1 + close_pct_change).cumprod() - 1)
+    close_return_df.fillna(0,inplace = True)
+    corr_matrix = close_return_df.corr()
+
+    top_pairs = get_top_abs_correlations(close_return_df, 10000)
+    top_pairs = pd.DataFrame(top_pairs, columns = ['Correlation'])
+    removed_top_pairs = top_pairs[top_pairs['Correlation']>0.9]
+    removed_top_pairs = removed_top_pairs.index
+
+    removed_list = []
+    confirmed_list = []
+    for ticker in top_list:
+        for i in removed_top_pairs:
+            ticker1 = i[0]
+            ticker2 = i[1]
+            if ticker == ticker1 and ticker2 not in removed_list:
+                removed_list.append(ticker2)
+            if ticker == ticker2 and ticker1 not in removed_list:
+                removed_list.append(ticker1)
+        if ticker not in removed_list:
+            confirmed_list.append(ticker)
+        top_list = [crypto for crypto in top_list if crypto not in removed_list] 
+        top_list = [crypto for crypto in top_list if crypto not in confirmed_list] 
+
+    if confirmed_top_list[0] not in confirmed_list:
+        confirmed_list = list(confirmed_top_list[0]) + confirmed_list
+
+    final_list = confirmed_list[:10]
+    return final_list
 
 def return_mpt_df(start_date, end_date, n_portfolios, n_days, n_assets, risky_assets, weights):
     prices_df = yf.download(risky_assets, start=start_date, end=end_date, adjusted=True)
@@ -920,7 +1202,3 @@ def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
-
-
-# dashboard that takes in start and end date for each input and returns weightage for top 10 crypto
-# 2 pages 
