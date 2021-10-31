@@ -1,38 +1,39 @@
 import dash
-from dash.exceptions import PreventUpdate
-from dash import html
-from dash import dcc
-from dash import dash_table
-from dash.html.A import A
 import dash_bootstrap_components as dbc
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from scipy.stats.stats import skew
-import yfinance as yf
 import plotly.graph_objects as go
+import yfinance as yf
 import statsmodels.api as sm
-# import tensorflow as tf
+import scipy.stats as stat
 
-from pandas_datareader import data
+from dash.exceptions import PreventUpdate
+from dash import html
+from dash import dcc
+from dash import dash_table
+from dash.dependencies import Input, Output, State
+from scipy.stats.stats import skew
 from scipy.stats import norm
-# from matplotlib.ticker import FuncFormatter
-# from numpy import array
-# from sklearn.preprocessing import MinMaxScaler
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense
-# from tensorflow.keras.layers import LSTM
-# from datetime import timedelta, date
-from plotly.subplots import make_subplots
+from pandas_datareader import data
+from plotly.subplots import make_subplots 
+from numpy import array
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+from datetime import timedelta, date
 
 
 from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
 
-from dash.dependencies import Input, Output, State
+# TICKERS = [
+#     'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD'
+# ]
 
 TICKERS = [
-    'BTC-USD','ETH-USD','HEX-USD','ADA-USD','BNB-USD','XRP-USD','SOL1-USD','DOT1-USD','USDC-USD','DOGE-USD','LUNA1-USD','UNI3-USD','LTC-USD','AVAX-USD','SHIB-USD','LINK-USD','BCH-USD','ALGO-USD','MATIC-USD','XLM-USD','FIL-USD','ICP1-USD','ATOM1-USD','VET-USD','AXS-USD','ETC-USD','TRX-USD','FTT1-USD','DAI1-USD','THETA-USD','XTZ-USD','FTM-USD','HBAR-USD','XMR-USD','CRO-USD','EGLD-USD','EOS-USD','CAKE-USD','MIOTA-USD','AAVE-USD','QNT-USD','BSV-USD','GRT2-USD','NEO-USD','KSM-USD','WAVES-USD','BTT1-USD','ONE2-USD','MKR-USD','STX1-USD','AMP1-USD','AR-USD','OMG-USD','DASH-USD','HNT1-USD','CHZ-USD','CELO-USD','DCR-USD','RUNE-USD','COMP-USD','XEM-USD','HOT1-USD','TFUEL-USD','ZEC-USD','XDC-USD','ICX-USD','CTC1-USD','CEL-USD','MANA-USD','SUSHI-USD','ENJ-USD','TUSD-USD','QTUM-USD', 'OMI-USD','BTG-USD','YFI-USD','CRV-USD','ZIL-USD','SNX-USD','RVN-USD','BAT-USD','SRM-USD','IOST-USD','CCXX-USD','SC-USD','CELR-USD','BNT-USD','ZRX-USD','ZEN-USD','ONT-USD','DFI-USD','DGB-USD','NANO-USD','XWC-USD','RAY-USD','ANKR-USD', 'IOTX-USD','SAND-USD','VGX-USD','UMA-USD','SKL-USD','C98-USD','FET-USD','KAVA-USD','GLM-USD','1INCH-USD','STORJ-USD','LRC-USD','WAXP-USD','RSR-USD','SXP-USD','BCD-USD','GNO-USD','COTI-USD','NMR-USD','LSK-USD','ARRR-USD','XVG-USD','WIN1-USD','CKB-USD','VTHO-USD','MED-USD','ARDR-USD','TWT-USD','ETN-USD','CVC-USD','STMX-USD', 'SNT-USD','ERG-USD','EWT-USD','HIVE-USD','VLX-USD','STRAX-USD','ROSE-USD','KDA-USD','RLC-USD','REP-USD','VRA-USD','BAND-USD','ARK-USD','DERO-USD','MAID-USD','CTSI-USD','XCH-USD','STEEM-USD','NKN-USD','OXT-USD','MLN-USD','MTL-USD','FUN-USD','MIR1-USD','PHA-USD','DAG-USD', 'SAPP-USD','ACH-USD','NU-USD','TOMO-USD', 'ANT-USD','WAN-USD','SYS-USD','AVA-USD','MCO-USD','CLV-USD','BAL-USD','META-USD','RBTC-USD','KIN-USD','BTS-USD','ZNN-USD','KMD-USD','IRIS-USD','TT-USD','XHV-USD','NYE-USD','GAS-USD','ABBC-USD','MONA-USD','DIVI-USD','FIRO-USD','PAC-USD','XNC-USD','NRG-USD', 'DNT-USD','ELA-USD','AION-USD','BTM-USD','GRS-USD','FRONT-USD','ZEL-USD','BEPRO-USD','HNS-USD','REV-USD','WTC-USD','RDD-USD','SBD-USD','ADX-USD','DMCH-USD','BEAM-USD','FIO-USD','BCN-USD','APL-USD','WOZX-USD','CUT-USD','XCP-USD','DGD-USD','CRU-USD','AXEL-USD','SERO-USD','NIM-USD', 'NULS-USD','MARO-USD','ADK-USD','PIVX-USD','CUDOS-USD','PCX-USD','VERI-USD','NXS-USD','GXC-USD','FSN-USD','PPT-USD','LOKI-USD','ATRI-USD','VITE-USD','CET-USD','VSYS-USD', 'CTXC-USD','MWC-USD','GO-USD','ZANO-USD','PART-USD','GRIN-USD','KRT-USD','FO-USD','AE-USD','MASS-USD','SRK-USD','VTC-USD','NAV-USD','VAL1-USD','WICC-USD','HC-USD','SOLVE-USD','MHC-USD','QASH-USD','SKY-USD','BTC2-USD','WABI-USD','PPC-USD','NEBL-USD','NAS-USD','NMC-USD','GAME-USD','RSTR-USD','GBYTE-USD','PAI-USD','AMB-USD','LBC-USD','SALT-USD', 'LCC-USD','PZM-USD','OBSR-USD', 'DCN-USD','BIP-USD','UBQ-USD','MAN-USD','BHP-USD','INSTAR-USD','TRTL-USD','EMC2-USD','PLC-USD','YOYOW-USD','TRUE-USD','DMD-USD','PAY-USD','CHI-USD','MRX-USD','HPB-USD','BLOCK-USD','SCC3-USD','NLG-USD','POA-USD','RINGX-USD','SFT-USD','QRK-USD','FCT-USD', 'DNA1-USD','PI-USD','NVT-USD','BHD-USD','ZYN-USD','SMART-USD','ACT-USD','INT-USD','WGR-USD','XDN-USD','AEON-USD','CMT1-USD','HTML-USD','GHOST1-USD','VEX-USD','HTDF-USD','XMY-USD','DYN-USD','VIA-USD','IDNA-USD','FTC-USD','XMC-USD','BCA-USD','FLO-USD','PMEER-USD','NYZO-USD', 'TERA-USD','SCP-USD','GRC-USD','BLK-USD','WINGS-USD','BTX-USD','GLEEC-USD','MIR-USD','OTO-USD','XST-USD','VIN-USD','PHR-USD','OWC-USD','ILC-USD','IOC-USD','POLIS-USD','CURE-USD','USNBT-USD', 'LEDU-USD','GHOST-USD','AYA-USD','FAIR-USD','CRW-USD','COLX-USD','TUBE-USD', 'SUB-USD','GCC1-USD','DIME-USD','XLT-USD','NIX-USD','BPS-USD','MGO-USD','FTX-USD','DDK-USD','XRC-USD','SONO1-USD','HYC-USD','EDG-USD','MBC-USD','ERK-USD','XBY-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD','UNO-USD','ECC-USD','CLAM-USD','MOAC-USD', 'ECA-USD','NLC2-USD','BDX-USD','ALIAS-USD','FLASH-USD','CSC-USD','LKK-USD','BONO-USD','XUC-USD','HONEY3-USD','DUN-USD','RBY-USD','HNC-USD','DACC-USD','SPHR-USD','AIB-USD','MINT-USD','SHIFT-USD','CCA-USD','MTC2-USD','MIDAS-USD','JDC-USD','SLS-USD','DCY-USD','GRN-USD','KNC-USD','LRG-USD','BRC-USD','SFMS-USD','BONFIRE-USD','VBK-USD', 'DTEP-USD','QRL-USD','ETP-USD','NXT-USD','XSN-USD'
+    'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD','AAVE-USD','MIOTA-USD','RUNE-USD','QNT-USD','ONE2-USD','BSV-USD','KSM-USD','NEO-USD','HNT1-USD','CHZ-USD','WAVES-USD','BTT1-USD','MKR-USD','STX1-USD','ENJ-USD','ZEC-USD','CELO-USD','DASH-USD','COMP-USD','AMP1-USD','TFUEL-USD','CRV-USD','OMG-USD','HOT1-USD','BAT-USD','AR-USD','SAND-USD','XEM-USD','DCR-USD','CTC1-USD','ICX-USD','SUSHI-USD','ZIL-USD','ZEN-USD','QTUM-USD','YFI-USD','ANKR-USD','TUSD-USD','RVN-USD','SNX-USD','BTG-USD','XDC-USD','CEL-USD','ZRX-USD','OMI-USD','CCXX-USD','BNT-USD','SC-USD','SRM-USD','KDA-USD','ONT-USD','IOST-USD','1INCH-USD','NANO-USD','WAXP-USD','RAY-USD','LRC-USD','VGX-USD','LRC-USD','DGB-USD','UMA-USD','CELR-USD','WIN1-USD','GNO-USD','C98-USD','XWC-USD','IOTX-USD','DFI-USD','NU-USD','FET-USD','GLM-USD','CKB-USD','KAVA-USD','STORJ-USD','RSR-USD','COTI-USD','SXP-USD','LSK-USD','NMR-USD','VTHO-USD','XVG-USD','MED-USD','TWT-USD','BCD-USD','VLX-USD','CTSI-USD','ARRR-USD','RLC-USD','SNT-USD','CVC-USD','VRA-USD','ARDR-USD','BAND-USD','HIVE-USD','ERG-USD','NKN-USD','STMX-USD','ETN-USD','EWT-USD','OXT-USD','ROSE-USD','STRAX-USD','REP-USD','SAPP-USD','ARK-USD','DAG-USD','MIR1-USD','MLN-USD','MAID-USD','STEEM-USD','XCH-USD','TOMO-USD','FUN-USD','MTL-USD','DERO-USD','ZNN-USD','SYS-USD','ACH-USD','PHA-USD','ANT-USD','WAN-USD','BAL-USD','RBTC-USD','CLV-USD','AVA-USD','META-USD','KIN-USD','BTS-USD','ADX-USD','KMD-USD','MCO-USD','IRIS-USD','HNS-USD','XHV-USD','NYE-USD','FIRO-USD','TT-USD','ZEL-USD','ABBC-USD','DNT-USD','MONA-USD','XNC-USD','NRG-USD','ELA-USD','GAS-USD','AION-USD','DMCH-USD','DIVI-USD','WOZX-USD','BTM-USD','PAC-USD','BEPRO-USD','NIM-USD','GRS-USD','FRONT-USD','WTC-USD','REV-USD','APL-USD','BEAM-USD','CUDOS-USD','FIO-USD','BCN-USD','DGD-USD','SBD-USD','VERI-USD','RDD-USD','SRK-USD','NULS-USD','VITE-USD','PCX-USD','MARO-USD','XCP-USD','SOLVE-USD','PIVX-USD','SERO-USD','AXEL-USD','CET-USD','NXS-USD','VSYS-USD','ATRI-USD','GXC-USD','VTC-USD','CRU-USD','CUT-USD','AE-USD','MWC-USD','GO-USD','FSN-USD','CTXC-USD','ADK-USD','GRIN-USD','KRT-USD','LOKI-USD','ZANO-USD','WICC-USD','PPT-USD','MHC-USD','GBYTE-USD','NAV-USD','MASS-USD','QASH-USD','VAL1-USD','NEBL-USD','XSN-USD','GAME-USD','NMC-USD','HC-USD','NAS-USD','BTC2-USD','ETP-USD','AMB-USD','PPC-USD','RSTR-USD','LBC-USD','PAI-USD','FO-USD','WABI-USD','PART-USD','NXT-USD','CHI-USD','BIP-USD','SALT-USD','MAN-USD','DTEP-USD','QRL-USD','SKY-USD','OBSR-USD','FCT-USD','PI-USD','MRX-USD','DCN-USD','TRUE-USD','PZM-USD','DMD-USD','EMC2-USD','LCC-USD','BHP-USD','PLC-USD','RINGX-USD','INSTAR-USD','TRTL-USD','QRK-USD','PAY-USD','YOYOW-USD','HPB-USD','SCC3-USD','SCP-USD','UBQ-USD','LEDU-USD','NLG-USD','DNA1-USD','NVT-USD','ACT-USD','XDN-USD','BHD-USD','BLOCK-USD','SFT-USD','SMART-USD','POA-USD','CMT1-USD','HTML-USD','AEON-USD','XMY-USD','WGR-USD','GLEEC-USD','INT-USD','DYN-USD','VIA-USD','XMC-USD','VEX-USD','GHOST1-USD','IDNA-USD','FLO-USD','ZYN-USD','PMEER-USD','FTC-USD','HTDF-USD','BTX-USD','TERA-USD','VIN-USD','OTO-USD','BLK-USD','ILC-USD','CURE-USD','WINGS-USD','NYZO-USD','MIR-USD','EDG-USD','GRC-USD','XST-USD','USNBT-USD','IOC-USD','GCC1-USD','DIME-USD','POLIS-USD','FTX-USD','COLX-USD','CRW-USD','BCA-USD','OWC-USD','FAIR-USD','TUBE-USD','SONO1-USD','PHR-USD','MBC-USD','XLT-USD','SUB-USD','AYA-USD','GHOST-USD','BPS-USD','NIX-USD','XRC-USD','MGO-USD','XBY-USD','DDK-USD','ERK-USD','HYC-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD','BDX-USD','ALIAS-USD','FLASH-USD','NLC2-USD','CSC-USD','ECC-USD','CLAM-USD','UNO-USD','BONO-USD','MOAC-USD','LKK-USD','ECA-USD','DACC-USD','RBY-USD','HNC-USD','SPHR-USD','MINT-USD','AIB-USD','XUC-USD','HONEY3-USD','DUN-USD','MTC2-USD','JDC-USD','CCA-USD','SLS-USD','DCY-USD','MIDAS-USD','BRC-USD','GRN-USD','KNC-USD','LRG-USD','BONFIRE-USD','BST-USD','SFMS-USD','BST-USD'
 ]
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -340,59 +341,87 @@ app.layout = dbc.Container(
         ),
         dbc.Button("Generate Portfolio Comparison", color="dark", className="mr-1", id="submit_comparison", n_clicks=0),
         
-        # weightage comparison
-        dbc.Spinner(
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [],
-                            id="gut_feel_weights"
-                        ),
-                        width=6,
+        dbc.Row(
+            [
+                dbc.Alert(id="portf_comparison_alert", is_open=False, duration=2000,
+                    style={
+                        'padding-top': 20,
+                        'padding-bottom': 20
+                    }
+                ),
+
+                # weightage comparison
+                dbc.Spinner(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                html.Div(
+                                    [],
+                                    id="gut_feel_weights"
+                                ),
+                                width=6,
+                            ),
+                            dbc.Col(
+                                html.Div(
+                                    [],
+                                    id="recommended_weights"
+                                ),
+                                width=6,
+                            ),
+                        ]
                     ),
-                    dbc.Col(
-                        html.Div(
-                            [],
-                            id="recommended_weights"
-                        ),
-                        width=6,
+                ),
+                
+                # returns comparison
+                dbc.Spinner(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                html.Div(id="gut_feel_returns"),
+                                width=6,
+                            ),
+                            dbc.Col(
+                                html.Div(id="recommended_returns"),
+                                width=6,
+                            ),
+                        ]
                     ),
-                ]
-            ),
+                ),
+
+                # sharpe ratio comparison
+                dbc.Spinner(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                html.Div(id="gut_feel_vol"),
+                                width=6,
+                            ),
+                            dbc.Col(
+                                html.Div(id="recommended_vol"),
+                                width=6,
+                            ),
+                        ]
+                    ),
+                ),
+            ],
+            style={
+                'padding-bottom': 100,
+                'padding-top': 20
+            },
         ),
         
-        # returns comparison
-        dbc.Spinner(
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(id="gut_feel_returns"),
-                        width=6,
-                    ),
-                    dbc.Col(
-                        html.Div(id="recommended_returns"),
-                        width=6,
-                    ),
-                ]
-            ),
-        ),
 
-        # sharpe ratio comparison
-        dbc.Spinner(
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(id="gut_feel_vol"),
-                        width=6,
-                    ),
-                    dbc.Col(
-                        html.Div(id="recommended_vol"),
-                        width=6,
-                    ),
-                ]
-            ),
-        ),
+        dbc.Button("Generate LSTM Predictions", color="dark", className="mr-1", id="lstm_button", n_clicks=0),
+        dbc.Row(
+            [
+                html.Div(id="lstm_graph"),
+                html.Div(id="lstm_table"),
+                
+            ],
+            style={
+                'padding-bottom': 100
+            },
+        )
     ]
 )
 
@@ -746,7 +775,7 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
         cryptos_list.append(rows[i]["crypto"])
         weights_list.append(rows[i]["weightage"])
 
-    if n_clicks == 1:
+    if isinstance(weights_list[0], str):
         if crypto == None:
             text = "Please select your crypto"
             color = "danger"
@@ -766,6 +795,8 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
             text = "Your crypto has been added"
             color = "success"
 
+        is_open = True
+
     else:
         if crypto == None:
             text = "Please select your crypto"
@@ -780,7 +811,7 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
                 text = "You have added this crypto before"
                 color = "danger"
 
-            elif sum(weights_list) + weight > 1:
+            elif (isinstance(weights_list[0], float) or isinstance(weights_list[0], int)) and sum(weights_list) + weight > 1:
                 text = "Your total weightage is more than 1"
                 color = "danger"
 
@@ -790,11 +821,11 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
                 weights_list.append(weight)
                 text = "Your crypto has been added"
                 color = "success"
-            
+
         is_open = True
 
     # this section generates the sharpe, returns and vol table
-    if sum(weights_list) == 1:
+    if isinstance(weights_list[0], float) and sum(weights_list) == 1:
         returns, volatility, sharpe_ratio = get_metrics(cryptos_list, weights_list, start_date, end_date)
         
         recommended_metrics = pd.DataFrame({"Returns": [returns], "Volatility": [volatility], "Sharpe Ratio": [sharpe_ratio]})
@@ -802,11 +833,10 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
         fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
     
     else:
-        recommended_metrics = pd.DataFrame({"Returns": [], "Volatility": [], "Sharpe Ratio": []})
+        recommended_metrics = pd.DataFrame({"Returns": ["-"], "Volatility": ["-"], "Sharpe Ratio": ["-"]})
 
         fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
 
-    print(rows)
     return rows, text, color, is_open, fig
 
 def get_metrics(tickers, weights, start_date, end_date):
@@ -886,8 +916,9 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
         max_vol_value = 0
         min_vol_value = 0
         label_text = "Input disabled"
-        text = "Success!"
-        color = "success"
+        text = ""
+        color = ""
+        is_open = False
         return min_vol_value, max_vol_value, min_vol_value, table_data, fig, True, label_text, text, color, is_open
 
     # adjusting volatility
@@ -935,11 +966,20 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-            label_text = "Input volatility"
-            text = "No portfolio for specified volatility"
-            color = "danger"
+            if slider_val == 0:
+                label_text = ""
+                text = ""
+                color = ""
+                is_open = False
 
-            return min_vol_value, max_vol_value, min_vol_value, table_data, fig, False, label_text, text, color, is_open
+                return min_vol_value, max_vol_value, min_vol_value, table_data, fig, False, label_text, text, color, is_open
+
+            else:
+                label_text = "Input volatility"
+                text = "No portfolio for specified volatility"
+                color = "danger"
+
+                return min_vol_value, max_vol_value, slider_val, table_data, fig, False, label_text, text, color, is_open
 
     # adjusting returns
     elif at == "returns":
@@ -988,12 +1028,20 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-            
-            text = "No portfolio for specified returns"
-            color = "danger"
-            label_text = "Input returns"
+            if slider_val == 0:
+                label_text = ""
+                text = ""
+                color = ""
+                is_open = False
 
-            return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig, False, label_text, text, color, is_open
+                return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig, False, label_text, text, color, is_open
+                
+            else:
+                text = "No portfolio for specified returns"
+                color = "danger"
+                label_text = "Input returns"
+
+                return min_rtn_value, max_rtn_value, slider_val, table_data, fig, False, label_text, text, color, is_open
 
 def max_sharpe(portf_results_df, weights):
     max_sharpe_ind = np.argmax(portf_results_df.sharpe_ratio)
@@ -1056,7 +1104,10 @@ def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
     Output('recommended_returns', 'children'),
     Output('gut_feel_returns', 'children'),
     Output('recommended_vol', 'children'),
-    Output('gut_feel_vol', 'children')],
+    Output('gut_feel_vol', 'children'),
+    Output('portf_comparison_alert', 'is_open'),
+    Output('portf_comparison_alert', 'color'),
+    Output('portf_comparison_alert', 'children')],
     Input('submit_comparison', 'n_clicks'),
     [State('portfolio_table', 'data'),
     State('portfolio_tables', 'data'),
@@ -1066,79 +1117,90 @@ def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
 )
 def update_portfolio_comparison(clicks, gut_feel_data, reco_data, start_date, end_date):
     # print(reco_data)
-    reco_tickers = []
-    reco_weights = []
-    for i in range(len(reco_data)):
-        reco_tickers.append(reco_data[i]['crypto'])
-        reco_weights.append(reco_data[i]['weightage'])
-    
     gut_feel_tickers = []
     gut_feel_weights = []
     for k in range(len(gut_feel_data)):
         gut_feel_tickers.append(gut_feel_data[k]['crypto'])
         gut_feel_weights.append(gut_feel_data[k]['weightage'])
     
-    # print(gut_feel_tickers)
-    # print(gut_feel_weights)
+    reco_tickers = []
+    reco_weights = []
+    for i in range(len(reco_data)):
+        reco_tickers.append(reco_data[i]['crypto'])
+        reco_weights.append(reco_data[i]['weightage'])
+    
+    print(gut_feel_weights)
+    print(type(gut_feel_weights[0]))
+    if isinstance(gut_feel_weights[0], str) or sum(gut_feel_weights) != 1:
+        text = "Your total weights for you selected portfolio is not 1!"
+        color = "danger"
+        is_open = True
+        empty_div = html.Div()
+        return empty_div, empty_div, empty_div, empty_div, empty_div, empty_div, is_open, color, text
+    else:
+        recommended_pie = dcc.Graph(figure=px.pie(reco_data, names='crypto', values='weightage'))
+        gut_feel_pie = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
 
-    recommended_pie = dcc.Graph(figure=px.pie(reco_data, names='crypto', values='weightage'))
-    gut_feel_pie = dcc.Graph(figure=px.pie(gut_feel_data, names='crypto', values='weightage'))
+        recommended_returns_series = get_rtn_series_df(reco_tickers, reco_weights, start_date, end_date)
+        recommended_returns_df = recommended_returns_series.to_frame().reset_index()
+        recommended_returns = dcc.Graph(
+                                    figure = {
+                                        'data': [
+                                            {'x': recommended_returns_df['Date'], 'y': recommended_returns_df[0],'type':'line'}
+                                        ],
+                                        'layout' : {
+                                            'title': 'Recommended Portfolio Returns'
+                                        }
+                                    }
+                                )
 
-    recommended_returns_series = get_rtn_series_df(reco_tickers, reco_weights, start_date, end_date)
-    recommended_returns_df = recommended_returns_series.to_frame().reset_index()
-    recommended_returns = dcc.Graph(
+        gut_feel_returns_series = get_rtn_series_df(gut_feel_tickers, gut_feel_weights, start_date, end_date)
+        gut_feel_returns_series = gut_feel_returns_series.rename("Close")
+        # print(gut_feel_returns_series)
+        gut_feel_returns_df = gut_feel_returns_series.to_frame().reset_index()
+        
+        gut_feel_returns = dcc.Graph(
+            figure = {
+                'data': [
+                    {'x': gut_feel_returns_df['Date'], 'y': gut_feel_returns_df['Close'],'type':'line'}
+                ],
+                'layout' : {
+                    'title': 'Selected Portfolio Returns'
+                }
+            }
+        )
+
+        recommended_vol_df = get_rolling_volatility_df(recommended_returns_series, 20).to_frame().reset_index()
+        print(recommended_vol_df)
+        recommended_vol = dcc.Graph(
                                 figure = {
                                     'data': [
-                                        {'x': recommended_returns_df['Date'], 'y': recommended_returns_df[0],'type':'line'}
+                                        {'x': recommended_vol_df['Date'], 'y': recommended_vol_df[0],'type':'line'}
                                     ],
                                     'layout' : {
-                                        'title': 'Recommended Portfolio Returns'
+                                        'title': 'Recommended Portfolio Volatility'
                                     }
                                 }
                             )
 
-    gut_feel_returns_series = get_rtn_series_df(gut_feel_tickers, gut_feel_weights, start_date, end_date)
-    gut_feel_returns_df = gut_feel_returns_series.to_frame().reset_index()
-    gut_feel_returns = dcc.Graph(
-                                figure = {
-                                    'data': [
-                                        {'x': gut_feel_returns_df['Date'], 'y': gut_feel_returns_df[0],'type':'line'}
-                                    ],
-                                    'layout' : {
-                                        'title': 'Selected Portfolio Returns'
-                                    }
-                                }
-                            )
-
-    recommended_vol_df = get_rolling_volatility_df(recommended_returns_series, 20).to_frame().reset_index()
-    recommended_vol = dcc.Graph(
+        gut_feel_vol_df = get_rolling_volatility_df(gut_feel_returns_series, 20).to_frame().reset_index()
+        # print(gut_feel_vol_df)
+        gut_feel_vol = dcc.Graph(
                             figure = {
                                 'data': [
-                                    {'x': recommended_vol_df['Date'], 'y': recommended_vol_df[0],'type':'line'}
+                                    {'x': gut_feel_vol_df['Date'], 'y': gut_feel_vol_df['Close'],'type':'line'}
                                 ],
                                 'layout' : {
-                                    'title': 'Recommended Portfolio Volatility'
+                                    'title': 'Selected Portfolio Volatility'
                                 }
                             }
                         )
-    # recommended_vol = ""
+        
+        text = ""
+        color = ""
+        is_open = False
 
-    
-    gut_feel_vol_df = get_rolling_volatility_df(gut_feel_returns_series, 20).to_frame().reset_index()
-    gut_feel_vol = dcc.Graph(
-                        figure = {
-                            'data': [
-                                {'x': gut_feel_vol_df['Date'], 'y': gut_feel_vol_df[0],'type':'line'}
-                            ],
-                            'layout' : {
-                                'title': 'Selected Portfolio Volatility'
-                            }
-                        }
-                    )
-    
-    # gut_feel_vol = ""
-    
-    return recommended_pie, gut_feel_pie, recommended_returns, gut_feel_returns, recommended_vol, gut_feel_vol
+        return recommended_pie, gut_feel_pie, recommended_returns, gut_feel_returns, recommended_vol, gut_feel_vol, is_open, color, text
 
 def get_rtn_series_df(tickers, weights, start_date, end_date):
     prices_df = yf.download(tickers, start=start_date, end=end_date, adjusted=True)
@@ -1147,13 +1209,195 @@ def get_rtn_series_df(tickers, weights, start_date, end_date):
     # print(len(weights))
     # print(len(rtn_series))
     weighted_rtn_series = weights * rtn_series
-    final_rtn_series = weighted_rtn_series.sum(axis=1)
+    if isinstance(weighted_rtn_series, pd.Series):
+        final_rtn_series = weighted_rtn_series
+        final_rtn_series.rename("Close")
+    else:
+        final_rtn_series = weighted_rtn_series.sum(axis=1)
+        final_rtn_series.rename("Close")
     
     return final_rtn_series
 
 def get_rolling_volatility_df(rtn_series, rolling_window):
     return pd.DataFrame.rolling(np.log((rtn_series+1)/(rtn_series+1).shift(1)),window=rolling_window).std() * np.sqrt(365)
 
+@app.callback(
+    [Output("lstm_table", "children"),
+    Output("lstm_graph", "children")],
+    Input("lstm_button", "n_clicks"),
+    [State("portfolio_tables", "data"),
+    State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value')],
+    prevent_initial_call = True
+)
+def lstm_predictions(clicks, data, start_date, end_date):
+    # get crypto and weights list
+    crypto_list = []
+    weights_list = []
+    for item in data:
+        crypto_list.append(item["crypto"])
+        weights_list.append(item["weightage"])
+
+    prices_df = yf.download(crypto_list, start=start_date, end=end_date, adjusted=True)
+    prices_df = prices_df['Close']
+    results = []
+
+    original_price = []
+    for ticker in crypto_list:
+        current_price = prices_df[ticker].iloc[-1]
+        original_price.append(current_price)
+    original_price
+    dataFrames_arr = []
+
+    for ticker in crypto_list:
+
+        close_df = prices_df[ticker]
+
+
+        scaler=MinMaxScaler(feature_range=(0,1))
+        close_df=scaler.fit_transform(np.array(close_df).reshape(-1,1))
+
+        training_size=int(len(close_df)*0.65)
+        # test_size=len(close_df)-training_size
+        train_data,test_data=close_df[0:training_size,:],close_df[training_size:len(close_df),:1]
+
+
+        time_step = 100
+        X_train, y_train = create_dataset(train_data, time_step)
+        X_test, ytest = create_dataset(test_data, time_step)
+
+        X_train =X_train.reshape(X_train.shape[0],X_train.shape[1] , 1)
+        X_test = X_test.reshape(X_test.shape[0],X_test.shape[1] , 1)
+
+        model= Sequential()
+        model.add(LSTM(50,return_sequences=True,input_shape=(X_train.shape[1],X_train.shape[2])))
+        model.add(LSTM(50,return_sequences=True))
+        model.add(LSTM(50))
+        model.add(Dense(1))
+        model.compile(loss='mean_squared_error',optimizer='adam') 
+        model.fit(X_train,y_train,validation_data=(X_test,ytest),epochs=1,batch_size = 32,verbose =1)
+
+        shape_input = test_data.shape[0]-100
+
+
+        x_input=test_data[shape_input:].reshape(1,-1)
+
+        temp_input=list(x_input)
+        temp_input=temp_input[0].tolist()
+
+
+
+        lst_output=[]
+        n_steps=100
+        i=0
+        while(i<30):
+            
+            if(len(temp_input)>100):
+                #print(temp_input)
+                x_input=np.array(temp_input[1:])
+                # print("{} day input {}".format(i,x_input))
+                x_input=x_input.reshape(1,-1)
+                x_input = x_input.reshape((1, n_steps, 1))
+                #print(x_input)
+                yhat = model.predict(x_input, verbose=0)
+                # print("{} day output {}".format(i,yhat))
+                temp_input.extend(yhat[0].tolist())
+                temp_input=temp_input[1:]
+                #print(temp_input)
+                lst_output.extend(yhat.tolist())
+                i=i+1
+            else:
+                x_input = x_input.reshape((1, n_steps,1))
+                yhat = model.predict(x_input, verbose=0)
+                # print(yhat[0])
+                temp_input.extend(yhat[0].tolist())
+                # print(len(temp_input))
+                lst_output.extend(yhat.tolist())
+                i=i+1
+
+
+        df3=close_df.tolist()
+        df3.extend(lst_output)
+
+        df3=scaler.inverse_transform(df3).tolist()
+        dataFrames_arr.append(df3)
+
+        results.append(df3[-1])
+
+    future_prices = []
+
+    for pr in results:
+        future_prices.append(pr[0])
+
+    array = []
+
+    for i in range(len(original_price)):
+        eachTicker = []
+        eachTicker.append(round(original_price[i], 4))
+        eachTicker.append(round(future_prices[i], 4))
+        array.append(eachTicker)
+
+
+    time_extension = len(df3) 
+
+    EndDate = prices_df.index[0] + timedelta(days=time_extension)
+
+    dateIndexes = pd.date_range(start='2020-01-01', end=EndDate)
+
+    df = pd.DataFrame(data = array, 
+                      index = crypto_list, 
+                      columns = ['original_prices','future_prices'])
+    df['pct_change'] = round(((df['future_prices'] - df['original_prices'])/df['original_prices']) * 100, 4)
+    df.sort_values(by='pct_change',ascending = False,inplace = True)
+
+    new_df = df.copy()
+    new_df['weights'] = weights_list
+
+    name = crypto_list[0]
+    column_name = name + " Price"
+    each_df = pd.DataFrame(data = dataFrames_arr[0], 
+                      index = dateIndexes, 
+                      columns = [column_name])
+      
+
+
+    for j in range(1, len(dataFrames_arr)):
+        name = crypto_list[j]
+        column_name = name + " Price"
+        each_df2 = pd.DataFrame(data = dataFrames_arr[j], 
+                        index = dateIndexes, 
+                        columns = [column_name])
+        each_df = pd.merge(each_df, each_df2, left_index=True, right_index=True)
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    for k in range(len(crypto_list)):
+        name = crypto_list[k]
+        column_name = name + " Price"
+
+        # Add traces
+        fig.add_trace(
+            go.Scatter(x=dateIndexes, y=each_df[column_name], name=column_name),
+            secondary_y=False,
+        )
+
+    # fig.show()
+    # new_df
+
+    figure = dcc.Graph(figure = fig)
+    # print(new_df)
+    new_df = new_df.reset_index()
+    table = dbc.Table.from_dataframe(new_df, striped = True , bordered = True, hover = True)
+
+    return table, figure
+
+def create_dataset(dataset, time_step=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset)-time_step-1):
+        a = dataset[i:(i+time_step), 0]
+        dataX.append(a)
+        dataY.append(dataset[i + time_step, 0])
+        
+    return np.array(dataX), np.array(dataY)
 
 # @app.callback(
 #     Output("testing", "children"),
