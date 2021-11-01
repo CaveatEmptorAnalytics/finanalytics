@@ -28,13 +28,13 @@ from datetime import timedelta, date
 from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
 
-# TICKERS = [
-#     'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD'
-# ]
-
 TICKERS = [
-    'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD','AAVE-USD','MIOTA-USD','RUNE-USD','QNT-USD','ONE2-USD','BSV-USD','KSM-USD','NEO-USD','HNT1-USD','CHZ-USD','WAVES-USD','BTT1-USD','MKR-USD','STX1-USD','ENJ-USD','ZEC-USD','CELO-USD','DASH-USD','COMP-USD','AMP1-USD','TFUEL-USD','CRV-USD','OMG-USD','HOT1-USD','BAT-USD','AR-USD','SAND-USD','XEM-USD','DCR-USD','CTC1-USD','ICX-USD','SUSHI-USD','ZIL-USD','ZEN-USD','QTUM-USD','YFI-USD','ANKR-USD','TUSD-USD','RVN-USD','SNX-USD','BTG-USD','XDC-USD','CEL-USD','ZRX-USD','OMI-USD','CCXX-USD','BNT-USD','SC-USD','SRM-USD','KDA-USD','ONT-USD','IOST-USD','1INCH-USD','NANO-USD','WAXP-USD','RAY-USD','LRC-USD','VGX-USD','LRC-USD','DGB-USD','UMA-USD','CELR-USD','WIN1-USD','GNO-USD','C98-USD','XWC-USD','IOTX-USD','DFI-USD','NU-USD','FET-USD','GLM-USD','CKB-USD','KAVA-USD','STORJ-USD','RSR-USD','COTI-USD','SXP-USD','LSK-USD','NMR-USD','VTHO-USD','XVG-USD','MED-USD','TWT-USD','BCD-USD','VLX-USD','CTSI-USD','ARRR-USD','RLC-USD','SNT-USD','CVC-USD','VRA-USD','ARDR-USD','BAND-USD','HIVE-USD','ERG-USD','NKN-USD','STMX-USD','ETN-USD','EWT-USD','OXT-USD','ROSE-USD','STRAX-USD','REP-USD','SAPP-USD','ARK-USD','DAG-USD','MIR1-USD','MLN-USD','MAID-USD','STEEM-USD','XCH-USD','TOMO-USD','FUN-USD','MTL-USD','DERO-USD','ZNN-USD','SYS-USD','ACH-USD','PHA-USD','ANT-USD','WAN-USD','BAL-USD','RBTC-USD','CLV-USD','AVA-USD','META-USD','KIN-USD','BTS-USD','ADX-USD','KMD-USD','MCO-USD','IRIS-USD','HNS-USD','XHV-USD','NYE-USD','FIRO-USD','TT-USD','ZEL-USD','ABBC-USD','DNT-USD','MONA-USD','XNC-USD','NRG-USD','ELA-USD','GAS-USD','AION-USD','DMCH-USD','DIVI-USD','WOZX-USD','BTM-USD','PAC-USD','BEPRO-USD','NIM-USD','GRS-USD','FRONT-USD','WTC-USD','REV-USD','APL-USD','BEAM-USD','CUDOS-USD','FIO-USD','BCN-USD','DGD-USD','SBD-USD','VERI-USD','RDD-USD','SRK-USD','NULS-USD','VITE-USD','PCX-USD','MARO-USD','XCP-USD','SOLVE-USD','PIVX-USD','SERO-USD','AXEL-USD','CET-USD','NXS-USD','VSYS-USD','ATRI-USD','GXC-USD','VTC-USD','CRU-USD','CUT-USD','AE-USD','MWC-USD','GO-USD','FSN-USD','CTXC-USD','ADK-USD','GRIN-USD','KRT-USD','LOKI-USD','ZANO-USD','WICC-USD','PPT-USD','MHC-USD','GBYTE-USD','NAV-USD','MASS-USD','QASH-USD','VAL1-USD','NEBL-USD','XSN-USD','GAME-USD','NMC-USD','HC-USD','NAS-USD','BTC2-USD','ETP-USD','AMB-USD','PPC-USD','RSTR-USD','LBC-USD','PAI-USD','FO-USD','WABI-USD','PART-USD','NXT-USD','CHI-USD','BIP-USD','SALT-USD','MAN-USD','DTEP-USD','QRL-USD','SKY-USD','OBSR-USD','FCT-USD','PI-USD','MRX-USD','DCN-USD','TRUE-USD','PZM-USD','DMD-USD','EMC2-USD','LCC-USD','BHP-USD','PLC-USD','RINGX-USD','INSTAR-USD','TRTL-USD','QRK-USD','PAY-USD','YOYOW-USD','HPB-USD','SCC3-USD','SCP-USD','UBQ-USD','LEDU-USD','NLG-USD','DNA1-USD','NVT-USD','ACT-USD','XDN-USD','BHD-USD','BLOCK-USD','SFT-USD','SMART-USD','POA-USD','CMT1-USD','HTML-USD','AEON-USD','XMY-USD','WGR-USD','GLEEC-USD','INT-USD','DYN-USD','VIA-USD','XMC-USD','VEX-USD','GHOST1-USD','IDNA-USD','FLO-USD','ZYN-USD','PMEER-USD','FTC-USD','HTDF-USD','BTX-USD','TERA-USD','VIN-USD','OTO-USD','BLK-USD','ILC-USD','CURE-USD','WINGS-USD','NYZO-USD','MIR-USD','EDG-USD','GRC-USD','XST-USD','USNBT-USD','IOC-USD','GCC1-USD','DIME-USD','POLIS-USD','FTX-USD','COLX-USD','CRW-USD','BCA-USD','OWC-USD','FAIR-USD','TUBE-USD','SONO1-USD','PHR-USD','MBC-USD','XLT-USD','SUB-USD','AYA-USD','GHOST-USD','BPS-USD','NIX-USD','XRC-USD','MGO-USD','XBY-USD','DDK-USD','ERK-USD','HYC-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD','BDX-USD','ALIAS-USD','FLASH-USD','NLC2-USD','CSC-USD','ECC-USD','CLAM-USD','UNO-USD','BONO-USD','MOAC-USD','LKK-USD','ECA-USD','DACC-USD','RBY-USD','HNC-USD','SPHR-USD','MINT-USD','AIB-USD','XUC-USD','HONEY3-USD','DUN-USD','MTC2-USD','JDC-USD','CCA-USD','SLS-USD','DCY-USD','MIDAS-USD','BRC-USD','GRN-USD','KNC-USD','LRG-USD','BONFIRE-USD','BST-USD','SFMS-USD','BST-USD'
+    'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD'
 ]
+
+# TICKERS = [
+#     'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD','AAVE-USD','MIOTA-USD','RUNE-USD','QNT-USD','ONE2-USD','BSV-USD','KSM-USD','NEO-USD','HNT1-USD','CHZ-USD','WAVES-USD','BTT1-USD','MKR-USD','STX1-USD','ENJ-USD','ZEC-USD','CELO-USD','DASH-USD','COMP-USD','AMP1-USD','TFUEL-USD','CRV-USD','OMG-USD','HOT1-USD','BAT-USD','AR-USD','SAND-USD','XEM-USD','DCR-USD','CTC1-USD','ICX-USD','SUSHI-USD','ZIL-USD','ZEN-USD','QTUM-USD','YFI-USD','ANKR-USD','TUSD-USD','RVN-USD','SNX-USD','BTG-USD','XDC-USD','CEL-USD','ZRX-USD','OMI-USD','CCXX-USD','BNT-USD','SC-USD','SRM-USD','KDA-USD','ONT-USD','IOST-USD','1INCH-USD','NANO-USD','WAXP-USD','RAY-USD','LRC-USD','VGX-USD','LRC-USD','DGB-USD','UMA-USD','CELR-USD','WIN1-USD','GNO-USD','C98-USD','XWC-USD','IOTX-USD','DFI-USD','NU-USD','FET-USD','GLM-USD','CKB-USD','KAVA-USD','STORJ-USD','RSR-USD','COTI-USD','SXP-USD','LSK-USD','NMR-USD','VTHO-USD','XVG-USD','MED-USD','TWT-USD','BCD-USD','VLX-USD','CTSI-USD','ARRR-USD','RLC-USD','SNT-USD','CVC-USD','VRA-USD','ARDR-USD','BAND-USD','HIVE-USD','ERG-USD','NKN-USD','STMX-USD','ETN-USD','EWT-USD','OXT-USD','ROSE-USD','STRAX-USD','REP-USD','SAPP-USD','ARK-USD','DAG-USD','MIR1-USD','MLN-USD','MAID-USD','STEEM-USD','XCH-USD','TOMO-USD','FUN-USD','MTL-USD','DERO-USD','ZNN-USD','SYS-USD','ACH-USD','PHA-USD','ANT-USD','WAN-USD','BAL-USD','RBTC-USD','CLV-USD','AVA-USD','META-USD','KIN-USD','BTS-USD','ADX-USD','KMD-USD','MCO-USD','IRIS-USD','HNS-USD','XHV-USD','NYE-USD','FIRO-USD','TT-USD','ZEL-USD','ABBC-USD','DNT-USD','MONA-USD','XNC-USD','NRG-USD','ELA-USD','GAS-USD','AION-USD','DMCH-USD','DIVI-USD','WOZX-USD','BTM-USD','PAC-USD','BEPRO-USD','NIM-USD','GRS-USD','FRONT-USD','WTC-USD','REV-USD','APL-USD','BEAM-USD','CUDOS-USD','FIO-USD','BCN-USD','DGD-USD','SBD-USD','VERI-USD','RDD-USD','SRK-USD','NULS-USD','VITE-USD','PCX-USD','MARO-USD','XCP-USD','SOLVE-USD','PIVX-USD','SERO-USD','AXEL-USD','CET-USD','NXS-USD','VSYS-USD','ATRI-USD','GXC-USD','VTC-USD','CRU-USD','CUT-USD','AE-USD','MWC-USD','GO-USD','FSN-USD','CTXC-USD','ADK-USD','GRIN-USD','KRT-USD','LOKI-USD','ZANO-USD','WICC-USD','PPT-USD','MHC-USD','GBYTE-USD','NAV-USD','MASS-USD','QASH-USD','VAL1-USD','NEBL-USD','XSN-USD','GAME-USD','NMC-USD','HC-USD','NAS-USD','BTC2-USD','ETP-USD','AMB-USD','PPC-USD','RSTR-USD','LBC-USD','PAI-USD','FO-USD','WABI-USD','PART-USD','NXT-USD','CHI-USD','BIP-USD','SALT-USD','MAN-USD','DTEP-USD','QRL-USD','SKY-USD','OBSR-USD','FCT-USD','PI-USD','MRX-USD','DCN-USD','TRUE-USD','PZM-USD','DMD-USD','EMC2-USD','LCC-USD','BHP-USD','PLC-USD','RINGX-USD','INSTAR-USD','TRTL-USD','QRK-USD','PAY-USD','YOYOW-USD','HPB-USD','SCC3-USD','SCP-USD','UBQ-USD','LEDU-USD','NLG-USD','DNA1-USD','NVT-USD','ACT-USD','XDN-USD','BHD-USD','BLOCK-USD','SFT-USD','SMART-USD','POA-USD','CMT1-USD','HTML-USD','AEON-USD','XMY-USD','WGR-USD','GLEEC-USD','INT-USD','DYN-USD','VIA-USD','XMC-USD','VEX-USD','GHOST1-USD','IDNA-USD','FLO-USD','ZYN-USD','PMEER-USD','FTC-USD','HTDF-USD','BTX-USD','TERA-USD','VIN-USD','OTO-USD','BLK-USD','ILC-USD','CURE-USD','WINGS-USD','NYZO-USD','MIR-USD','EDG-USD','GRC-USD','XST-USD','USNBT-USD','IOC-USD','GCC1-USD','DIME-USD','POLIS-USD','FTX-USD','COLX-USD','CRW-USD','BCA-USD','OWC-USD','FAIR-USD','TUBE-USD','SONO1-USD','PHR-USD','MBC-USD','XLT-USD','SUB-USD','AYA-USD','GHOST-USD','BPS-USD','NIX-USD','XRC-USD','MGO-USD','XBY-USD','DDK-USD','ERK-USD','HYC-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD','BDX-USD','ALIAS-USD','FLASH-USD','NLC2-USD','CSC-USD','ECC-USD','CLAM-USD','UNO-USD','BONO-USD','MOAC-USD','LKK-USD','ECA-USD','DACC-USD','RBY-USD','HNC-USD','SPHR-USD','MINT-USD','AIB-USD','XUC-USD','HONEY3-USD','DUN-USD','MTC2-USD','JDC-USD','CCA-USD','SLS-USD','DCY-USD','MIDAS-USD','BRC-USD','GRN-USD','KNC-USD','LRG-USD','BONFIRE-USD','BST-USD','SFMS-USD','BST-USD'
+# ]
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -907,7 +907,7 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
         metrics = portf_results_df.loc[max_sharpe_ind]
         # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-        recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+        recommended_metrics = pd.DataFrame({"Sharpe Ratio": [metrics[1].round(2)], "Returns": [metrics[0].round(2)], "Volatility": [metrics[2].round(2)]})
         
         fig  = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
         # fig = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
@@ -938,7 +938,7 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
             
             metrics = portf_results_df.loc[index_from_vol]
             # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+            recommended_metrics = pd.DataFrame({"Sharpe Ratio": [metrics[1].round(2)], "Returns": [metrics[0].round(2)], "Volatility": [metrics[2].round(2)]})
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
@@ -962,7 +962,7 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
             metrics = portf_results_df.loc[index_from_vol]
             # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+            recommended_metrics = pd.DataFrame({"Sharpe Ratio": [metrics[1].round(2)], "Returns": [metrics[0].round(2)], "Volatility": [metrics[2].round(2)]})
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
@@ -1000,8 +1000,7 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
             metrics = portf_results_df.loc[index_from_rtn]
             # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
-
+            recommended_metrics = pd.DataFrame({"Sharpe Ratio": [metrics[1].round(2)], "Returns": [metrics[0].round(2)], "Volatility": [metrics[2].round(2)]})
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
@@ -1024,7 +1023,7 @@ def switch_tab(at, n_clicks, data, top_10_crypto, slider_val, is_open):
 
             metrics = portf_results_df.loc[index_from_rtn]
             # recommended_df = pd.DataFrame(table_data, columns=['crypto', 'weights'])
-            recommended_metrics = pd.DataFrame({"Returns": [metrics[0].round(2)], "Volatility": [metrics[1].round(2)], "Sharpe Ratio": [metrics[2].round(2)]})
+            recommended_metrics = pd.DataFrame({"Sharpe Ratio": [metrics[1].round(2)], "Returns": [metrics[0].round(2)], "Volatility": [metrics[2].round(2)]})
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
@@ -1398,20 +1397,6 @@ def create_dataset(dataset, time_step=1):
         dataY.append(dataset[i + time_step, 0])
         
     return np.array(dataX), np.array(dataY)
-
-# @app.callback(
-#     Output("testing", "children"),
-#     # Input("get_reco_portf", "n_clicks"),
-#     Input("store_ticker_dataframe", "data"),
-#     prevent_initial_call = True
-# )
-# def test_pull(data):
-#     print(data)
-#     if data:
-#         df = pd.DataFrame(data)
-#         return dbc.Table.from_dataframe(df)
-#     else:
-#         return "FAILED"
 
 if __name__ == "__main__":
     app.run_server(debug=True)
