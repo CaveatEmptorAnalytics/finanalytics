@@ -10,60 +10,29 @@ import plotly.express as px
 from scipy.stats.stats import skew
 import yfinance as yf
 import plotly.graph_objects as go
+import statsmodels.api as sm
+import tensorflow as tf
 
 from pandas_datareader import data
 from scipy.stats import norm
+from matplotlib.ticker import FuncFormatter
+from numpy import array
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import LSTM
+from datetime import timedelta, date
+from plotly.subplots import make_subplots
+
 
 from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
 
 from dash.dependencies import Input, Output, State
 
-TICKERS = ['BTC-USD','ETH-USD','HEX-USD','ADA-USD','BNB-USD','XRP-USD','SOL1-USD','DOT1-USD','USDC-USD',
-           'DOGE-USD','LUNA1-USD','UNI3-USD','LTC-USD','AVAX-USD','SHIB-USD','LINK-USD','BCH-USD','ALGO-USD',
-           'MATIC-USD','XLM-USD','FIL-USD','ICP1-USD','ATOM1-USD','VET-USD','AXS-USD','ETC-USD','TRX-USD',
-           'FTT1-USD','DAI1-USD','THETA-USD','XTZ-USD','FTM-USD','HBAR-USD','XMR-USD','CRO-USD','EGLD-USD',
-           'EOS-USD','CAKE-USD','MIOTA-USD','AAVE-USD','QNT-USD','BSV-USD','GRT2-USD','NEO-USD','KSM-USD',
-           'WAVES-USD','BTT1-USD','ONE2-USD','MKR-USD','STX1-USD','AMP1-USD','AR-USD','OMG-USD','DASH-USD',
-           'HNT1-USD','CHZ-USD','CELO-USD','DCR-USD','RUNE-USD','COMP-USD','XEM-USD','HOT1-USD','TFUEL-USD',
-           'ZEC-USD','XDC-USD','ICX-USD','CTC1-USD','CEL-USD','MANA-USD','SUSHI-USD','ENJ-USD','TUSD-USD',
-           'QTUM-USD', 'OMI-USD','BTG-USD','YFI-USD','CRV-USD','ZIL-USD','SNX-USD','RVN-USD','BAT-USD',
-           'SRM-USD','IOST-USD','CCXX-USD','SC-USD','CELR-USD','BNT-USD','ZRX-USD','ZEN-USD','ONT-USD',
-           'DFI-USD','DGB-USD','NANO-USD','XWC-USD','RAY-USD','ANKR-USD', 'IOTX-USD','SAND-USD','VGX-USD',
-           'UMA-USD','SKL-USD','C98-USD','FET-USD','KAVA-USD','GLM-USD','1INCH-USD','STORJ-USD','LRC-USD',
-           'WAXP-USD','RSR-USD','SXP-USD','BCD-USD','GNO-USD','COTI-USD','NMR-USD','LSK-USD','ARRR-USD',
-           'XVG-USD','WIN1-USD','CKB-USD','VTHO-USD','MED-USD','ARDR-USD','TWT-USD','ETN-USD','CVC-USD',
-           'STMX-USD', 'SNT-USD','ERG-USD','EWT-USD','HIVE-USD','VLX-USD','STRAX-USD','ROSE-USD','KDA-USD',
-           'RLC-USD','REP-USD','VRA-USD','BAND-USD','ARK-USD','DERO-USD','MAID-USD','CTSI-USD','XCH-USD',
-           'STEEM-USD','NKN-USD','OXT-USD','MLN-USD','MTL-USD','FUN-USD','MIR1-USD','PHA-USD','DAG-USD',
-           'SAPP-USD','ACH-USD','NU-USD','TOMO-USD', 'ANT-USD','WAN-USD','SYS-USD','AVA-USD','MCO-USD',
-           'CLV-USD','BAL-USD','META-USD','RBTC-USD','KIN-USD','BTS-USD','ZNN-USD','KMD-USD','IRIS-USD',
-           'TT-USD','XHV-USD','NYE-USD','GAS-USD','ABBC-USD','MONA-USD','DIVI-USD','FIRO-USD','PAC-USD',
-           'XNC-USD','NRG-USD', 'DNT-USD','ELA-USD','AION-USD','BTM-USD','GRS-USD','FRONT-USD','ZEL-USD',
-           'BEPRO-USD','HNS-USD','REV-USD','WTC-USD','RDD-USD','SBD-USD','ADX-USD','DMCH-USD','BEAM-USD',
-           'FIO-USD','BCN-USD','APL-USD','WOZX-USD','CUT-USD','XCP-USD','DGD-USD','CRU-USD','AXEL-USD',
-           'SERO-USD','NIM-USD', 'NULS-USD','MARO-USD','ADK-USD','PIVX-USD','CUDOS-USD','PCX-USD','VERI-USD',
-           'NXS-USD','GXC-USD','FSN-USD','PPT-USD','LOKI-USD','ATRI-USD','VITE-USD','CET-USD','VSYS-USD',
-           'CTXC-USD','MWC-USD','GO-USD','ZANO-USD','PART-USD','GRIN-USD','KRT-USD','FO-USD','AE-USD',
-           'MASS-USD','SRK-USD','VTC-USD','NAV-USD','VAL1-USD','WICC-USD','HC-USD','SOLVE-USD','MHC-USD',
-           'QASH-USD','SKY-USD','BTC2-USD','WABI-USD','PPC-USD','NEBL-USD','NAS-USD','NMC-USD','GAME-USD',
-           'RSTR-USD','GBYTE-USD','PAI-USD','AMB-USD','LBC-USD','SALT-USD', 'LCC-USD','PZM-USD','OBSR-USD',
-           'DCN-USD','BIP-USD','UBQ-USD','MAN-USD','BHP-USD','INSTAR-USD','TRTL-USD','EMC2-USD','PLC-USD',
-           'YOYOW-USD','TRUE-USD','DMD-USD','PAY-USD','CHI-USD','MRX-USD','HPB-USD','BLOCK-USD','SCC3-USD',
-           'NLG-USD','POA-USD','RINGX-USD','SFT-USD','QRK-USD','FCT-USD', 'DNA1-USD','PI-USD','NVT-USD',
-           'BHD-USD','ZYN-USD','SMART-USD','ACT-USD','INT-USD','WGR-USD','XDN-USD','AEON-USD','CMT1-USD',
-           'HTML-USD','GHOST1-USD','VEX-USD','HTDF-USD','XMY-USD','DYN-USD','VIA-USD','IDNA-USD','FTC-USD',
-           'XMC-USD','BCA-USD','FLO-USD','PMEER-USD','NYZO-USD', 'TERA-USD','SCP-USD','GRC-USD','BLK-USD',
-           'WINGS-USD','BTX-USD','GLEEC-USD','MIR-USD','OTO-USD','XST-USD','VIN-USD','PHR-USD','OWC-USD',
-           'ILC-USD','IOC-USD','POLIS-USD','CURE-USD','USNBT-USD', 'LEDU-USD','GHOST-USD','AYA-USD',
-           'FAIR-USD','CRW-USD','COLX-USD','TUBE-USD', 'SUB-USD','GCC1-USD','DIME-USD','XLT-USD','NIX-USD',
-           'BPS-USD','MGO-USD','FTX-USD','DDK-USD','XRC-USD','SONO1-USD','HYC-USD','EDG-USD','MBC-USD',
-           'ERK-USD','XBY-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD',
-           'UNO-USD','ECC-USD','CLAM-USD','MOAC-USD', 'ECA-USD','NLC2-USD','BDX-USD','ALIAS-USD','FLASH-USD',
-           'CSC-USD','LKK-USD','BONO-USD','XUC-USD','HONEY3-USD','DUN-USD','RBY-USD','HNC-USD','DACC-USD',
-           'SPHR-USD','AIB-USD','MINT-USD','SHIFT-USD','CCA-USD','MTC2-USD','MIDAS-USD','JDC-USD','SLS-USD',
-           'DCY-USD','GRN-USD','KNC-USD','LRG-USD','BRC-USD','SFMS-USD','BONFIRE-USD','VBK-USD', 'DTEP-USD',
-           'QRL-USD','ETP-USD','NXT-USD','XSN-USD']
+TICKERS = [
+    '1INCH-USD', 'AAVE-USD', 'ABBC-USD', 'ACH-USD', 'ACT-USD', 'ADA-USD', 'ADK-USD', 'ADX-USD', 'AE-USD', 'AEON-USD', 'AIB-USD', 'AION-USD', 'ALGO-USD', 'ALIAS-USD', 'AMB-USD', 'AMP1-USD', 'ANKR-USD', 'ANT-USD', 'APL-USD', 'AR-USD', 'ARDR-USD', 'ARK-USD', 'ARRR-USD', 'ATB-USD', 'ATOM1-USD', 'ATRI-USD', 'AVA-USD', 'AVAX-USD', 'AXEL-USD', 'AXS-USD', 'AYA-USD', 'BAL-USD', 'BAND-USD', 'BAT-USD', 'BCA-USD', 'BCD-USD', 'BCH-USD', 'BCN-USD', 'BDX-USD', 'BEAM-USD', 'BEPRO-USD', 'BHD-USD', 'BHP-USD', 'BIP-USD', 'BLK-USD', 'BLOCK-USD', 'BNB-USD', 'BNT-USD', 'BONFIRE-USD', 'BONO-USD', 'BPC-USD', 'BPS-USD', 'BRC-USD', 'BSV-USD', 'BTC-USD', 'BTC2-USD', 'BTG-USD', 'BTM-USD', 'BTS-USD', 'BTT1-USD', 'BTX-USD', 'C98-USD', 'CAKE-USD', 'CCA-USD', 'CCXX-USD', 'CEL-USD', 'CELO-USD', 'CELR-USD', 'CET-USD', 'CHI-USD', 'CHZ-USD', 'CKB-USD', 'CLAM-USD', 'CLV-USD', 'CMT1-USD', 'COLX-USD', 'COMP-USD', 'COMP1-USD', 'COTI-USD', 'CRO-USD', 'CRU-USD', 'CRV-USD', 'CRW-USD', 'CSC-USD', 'CTC1-USD', 'CTSI-USD', 'CTXC-USD', 'CUDOS-USD', 'CURE-USD', 'CUT-USD', 'CVC-USD', 'DACC-USD', 'DAG-USD', 'DAI1-USD', 'DASH-USD', 'DCN-USD', 'DCR-USD', 'DCY-USD', 'DDK-USD', 'DERO-USD', 'DFI-USD', 'DGB-USD', 'DGD-USD', 'DIME-USD', 'DIVI-USD', 'DMCH-USD', 'DMD-USD', 'DNA1-USD', 'DNT-USD', 'DOGE-USD', 'DOT1-USD', 'DTEP-USD', 'DUN-USD', 'DYN-USD', 'ECA-USD', 'ECC-USD', 'EDG-USD', 'EGLD-USD', 'ELA-USD', 'EMC2-USD', 'ENJ-USD', 'EOS-USD', 'ERG-USD', 'ERK-USD', 'ETC-USD', 'ETH-USD', 'ETN-USD', 'ETP-USD', 'EWT-USD', 'FAIR-USD', 'FCT-USD', 'FET-USD', 'FIL-USD', 'FIO-USD', 'FIRO-USD', 'FLASH-USD', 'FLO-USD', 'FO-USD', 'FRONT-USD','FRST-USD','FSN-USD', 'FTC-USD', 'FTM-USD', 'FTT1-USD', 'FTX-USD', 'FUN-USD', 'GAME-USD', 'GAS-USD', 'GBYTE-USD', 'GCC1-USD', 'GHOST-USD', 'GHOST1-USD', 'GLEEC-USD', 'GLM-USD', 'GNO-USD', 'GO-USD', 'GRC-USD', 'GRIN-USD', 'GRN-USD', 'GRS-USD', 'GRT2-USD', 'GXC-USD', 'HBAR-USD', 'HC-USD', 'HEX-USD', 'HIVE-USD', 'HNC-USD', 'HNS-USD', 'HNT1-USD', 'HONEY3-USD', 'HOT1-USD', 'HPB-USD', 'HTDF-USD', 'HTML-USD', 'HYC-USD', 'ICP1-USD', 'ICX-USD', 'IDNA-USD', 'ILC-USD', 'INSTAR-USD', 'INT-USD', 'IOC-USD', 'IOST-USD', 'IOTX-USD', 'IRIS-USD', 'JDC-USD', 'KAVA-USD', 'KDA-USD', 'KIN-USD', 'KMD-USD', 'KNC-USD', 'KRT-USD', 'KSM-USD', 'LBC-USD', 'LCC-USD', 'LEDU-USD', 'LINK-USD', 'LKK-USD', 'LOKI-USD', 'LRC-USD', 'LRG-USD', 'LSK-USD', 'LTC-USD', 'LUNA1-USD', 'MAID-USD', 'MAN-USD', 'MANA-USD', 'MARO-USD', 'MASS-USD', 'MATIC-USD', 'MBC-USD', 'MCO-USD', 'MED-USD', 'META-USD', 'MGO-USD', 'MHC-USD', 'MIDAS-USD', 'MINT-USD', 'MIOTA-USD', 'MIR-USD', 'MIR1-USD', 'MKR-USD', 'MLN-USD', 'MOAC-USD', 'MONA-USD', 'MRX-USD', 'MTC2-USD', 'MTL-USD', 'MWC-USD', 'NANO-USD', 'NAS-USD', 'NAV-USD', 'NEBL-USD', 'NEO-USD', 'NIM-USD', 'NIX-USD', 'NKN-USD', 'NLC2-USD', 'NLG-USD', 'NMC-USD', 'NMR-USD', 'NRG-USD', 'NU-USD', 'NULS-USD', 'NVT-USD', 'NXS-USD', 'NXT-USD', 'NYE-USD', 'NYZO-USD', 'OBSR-USD', 'OMG-USD', 'OMI-USD', 'ONE2-USD', 'ONT-USD', 'OTO-USD', 'OURO-USD', 'OWC-USD', 'OXT-USD', 'PAC-USD', 'PAI-USD', 'PART-USD', 'PAY-USD', 'PCX-USD', 'PHA-USD', 'PHR-USD', 'PI-USD', 'PIVX-USD', 'PLC-USD', 'PMEER-USD', 'POA-USD', 'POLIS-USD', 'PPC-USD', 'PPT-USD', 'PZM-USD', 'QASH-USD', 'QNT-USD', 'QRK-USD', 'QRL-USD', 'QTUM-USD', 'RAY-USD', 'RBTC-USD', 'RBY-USD', 'RDD-USD', 'REP-USD', 'REV-USD', 'RINGX-USD', 'RLC-USD', 'ROSE-USD', 'RSR-USD', 'RSTR-USD', 'RUNE-USD', 'RVN-USD', 'SALT-USD', 'SAND-USD', 'SAPP-USD', 'SBD-USD', 'SC-USD', 'SCC3-USD', 'SCP-USD', 'SERO-USD', 'SFMS-USD', 'SFT-USD', 'SHIB-USD', 'SHIFT-USD', 'SKL-USD', 'SKY-USD','SLS-USD', 'SMART-USD', 'SNGLS-USD', 'SNT-USD', 'SNX-USD', 'SOL1-USD', 'SOLVE-USD', 'SONO1-USD', 'SPHR-USD', 'SRK-USD', 'SRM-USD', 'STEEM-USD', 'STMX-USD', 'STORJ-USD', 'STRAX-USD', 'STX1-USD', 'SUB-USD', 'SUSHI-USD', 'SXP-USD', 'SYS-USD', 'TERA-USD', 'TFUEL-USD', 'THETA-USD', 'TOMO-USD', 'TRTL-USD', 'TRUE-USD', 'TRX-USD', 'TT-USD', 'TUBE-USD', 'TUSD-USD', 'TWT-USD', 'UBQ-USD', 'UMA-USD', 'UNI3-USD', 'UNO-USD', 'USDC-USD', 'USNBT-USD', 'VAL1-USD', 'VBK-USD', 'VERI-USD', 'VEX-USD', 'VGX-USD', 'VIA-USD', 'VIN-USD', 'VITE-USD', 'VLX-USD', 'VRA-USD', 'VSYS-USD', 'VTC-USD', 'VTHO-USD', 'WABI-USD', 'WAN-USD', 'WAVES-USD', 'WAXP-USD', 'WGR-USD', 'WICC-USD', 'WIN1-USD', 'WINGS-USD', 'WOZX-USD', 'WTC-USD', 'XAS-USD', 'XBY-USD', 'XCH-USD', 'XCP-USD', 'XDC-USD', 'XDN-USD', 'XEM-USD', 'XHV-USD', 'XLM-USD', 'XLT-USD', 'XMC-USD', 'XMR-USD', 'XMY-USD', 'XNC-USD','XRC-USD', 'XRP-USD', 'XSN-USD', 'XST-USD', 'XTZ-USD', 'XUC-USD', 'XVG-USD', 'XWC-USD', 'YFI-USD', 'YOYOW-USD', 'ZANO-USD', 'ZEC-USD', 'ZEL-USD', 'ZEN-USD', 'ZIL-USD', 'ZNN-USD', 'ZRX-USD', 'ZYN-USD'
+ ]
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -124,6 +93,24 @@ app.layout = dbc.Container(
                                     'padding': 10
                                 },
                             ),
+                            dbc.Col(
+                                [
+                                    dbc.Button("Confirm", color="dark", className="mr-1", id="pull_data", n_clicks=0 ),
+                                ],
+                                width = 1,
+                                style={
+                                    "padding": 10
+                                }
+                            ),
+                            dbc.Col(
+                                [
+                                    dbc.Button("Get Recommended Portfolio", color="dark", className="mr-1", id="get_reco_portf", n_clicks=0 ),
+                                ],
+                                width = 1,
+                                style={
+                                    "padding": 10
+                                }
+                            )
                         ]
                     ),
                 ],
@@ -132,6 +119,7 @@ app.layout = dbc.Container(
             ),
             className="p-3 text-white bg-dark rounded-3",
         ),
+        dcc.Store(id="memory"),
         # this section is for them to select the crypto ticker that they want to analyse
         dbc.Row(
             [
@@ -186,9 +174,9 @@ app.layout = dbc.Container(
                                     [
                                         dbc.Label("Select crypto", html_for="dropdown"),
                                         dcc.Dropdown(
-                                            id="dropdown",
+                                            id="gut_feel_dropdown",
                                             options=[{"value": x, "label": x} 
-                                                    for x in TICKERS]
+                                            for x in TICKERS]
                                         ),
                                     ],
                                     className="col-4"
@@ -217,44 +205,45 @@ app.layout = dbc.Container(
                         ),
                         dbc.Row(
                             [
-                                dbc.Col(
-                                    html.Div(
-                                        [
-                                            dash_table.DataTable(
-                                                id='portfolio_table',
-                                                columns=[{'name': 'Crypto', 'id': 'crypto', 'presentation': 'dropdown', 'deletable': False, 'renamable': False},
-                                                        {'name': 'weightage', 'id': 'weightage', 'deletable': False, 'renamable': False}
-                                                ],
-                                                data=[{'crypto': 'Select your crypto ticker from the dropdown', 'weightage': 'Input your desired weights for the crypto'},
-                                                ],
-                                                # editable=True,                  # allow user to edit data inside tabel
-                                                row_deletable=True,             # allow user to delete rows
-                                                # sort_action="native",           # give user capability to sort columns
-                                                sort_mode="single",             # sort across 'multi' or 'single' columns
-                                                # filter_action="native",         # allow filtering of columns
-                                                page_action='none',             # render all of the data at once. No paging.
-                                                # style_table={'height': '200px', 'overflowY': 'auto'},
-                                                style_cell={'textAlign': 'center'},
-                                                style_data={
-                                                    'whiteSpace': 'normal',
-                                                    'height': 'auto',
-                                                },
-                                            ),   
-                                            dbc.Alert(
-                                                id="alert_auto",
-                                                is_open=False,
-                                                duration=2000,
-                                                style={
-                                                    'padding-top': 20,
-                                                }
-                                            ),
-                                        ],
-                                    ),
-                                )
+                                html.Div(id="gut_feel_portfolio_metrics"),
+                                html.Div(
+                                    [
+                                        dbc.Alert(
+                                            id="alert_auto",
+                                            is_open=False,
+                                            duration=2000,
+                                            style={
+                                                'padding-top': 20,
+                                                'padding-bottom': 20
+                                            }
+                                        ),
+                                        dash_table.DataTable(
+                                            id='portfolio_table',
+                                            columns=[{'name': 'Crypto', 'id': 'crypto', 'presentation': 'dropdown', 'deletable': False, 'renamable': False},
+                                                    {'name': 'weightage', 'id': 'weightage', 'deletable': False, 'renamable': False}
+                                            ],
+                                            data=[{'crypto': 'Select your crypto ticker from the dropdown', 'weightage': 'Input your desired weights for the crypto'},
+                                            ],
+                                            # editable=True,                  # allow user to edit data inside tabel
+                                            row_deletable=True,             # allow user to delete rows
+                                            # sort_action="native",           # give user capability to sort columns
+                                            sort_mode="single",             # sort across 'multi' or 'single' columns
+                                            # filter_action="native",         # allow filtering of columns
+                                            page_action='none',             # render all of the data at once. No paging.
+                                            # style_table={'height': '200px', 'overflowY': 'auto'},
+                                            style_cell={'textAlign': 'center'},
+                                            style_data={
+                                                'whiteSpace': 'normal',
+                                                'height': 'auto',
+                                            },
+                                        ),   
+                                    ],
+                                ),
                             ],
                             style={
                                 'padding-top': 20,
-                                'padding-bottom': 30
+                                'padding-bottom': 30,
+                                'text-align': 'center'
                             },
                         ),
                     ],
@@ -288,11 +277,41 @@ app.layout = dbc.Container(
                         ),
                         dbc.Spinner(
                             dbc.Row(
-                                [
-                                    dcc.Slider(id="slider_bar", min=0, max=10, step=0.01, value=0),
+                                [   
+                                    html.Div(
+                                        [
+                                            dbc.Label(id="vol_rtn_label", html_for="vol_rtn_input", align="start", style={
+                                                "padding": 10
+                                            }),
+                                            dbc.Input(
+                                                type="number",
+                                                id="vol_rtn_input",
+                                                min = 0,
+                                                max = 0,
+                                                value = 0
+                                            ),
+                                        ],
+                                        className = "col-11"
+                                    ),
+                                    html.Div(
+                                        [
+                                            dbc.Button("Send", color="dark", className="mt-1 align-self-end", id="submit_vol_rtn_input", n_clicks=0)
+                                        ],
+                                        className = "col-1 d-flex"
+                                    ),
+
                                     html.Div(id="portfolio_metrics"),
                                     html.Div(
                                         [
+                                            dbc.Alert(
+                                                id="recommended_alert_auto",
+                                                is_open=False,
+                                                duration=2000,
+                                                style={
+                                                    'padding-top': 20,
+                                                    'padding-bottom': 20
+                                                }
+                                            ),
                                             dash_table.DataTable(
                                                 id='portfolio_tables',
                                                 columns=[{'name': 'Crypto', 'id': 'crypto', 'presentation': 'dropdown', 'deletable': False, 'renamable': False},
@@ -355,7 +374,6 @@ app.layout = dbc.Container(
             ),
         ),
         
-
         # returns comparison
         dbc.Spinner(
             dbc.Row(
@@ -387,13 +405,19 @@ app.layout = dbc.Container(
                 ]
             ),
         ),
-        # dbc.Row(
-        #     [
-        #         dbc.Col(html.Div("One of three columns")),
-        #         dbc.Col(html.Div("One of three columns")),
-        #         dbc.Col(html.Div("One of three columns")),
-        #     ]
-        # ),
+        dbc.Row(
+            [
+                dbc.Col(html.Div("One of three columns")),
+                dbc.Col(html.Div("One of three columns")),
+                dbc.Col(html.Div("One of three columns")),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Button("Generate LSTM Predictions", color="dark", className="mr-1", id="lstm_button", n_clicks=0),
+                html.Div(id="lstm_weights")
+            ]
+        )
     ]
 )
 
@@ -403,20 +427,49 @@ app.layout = dbc.Container(
 
 # dash video guide https://www.youtube.com/watch?v=mTsZL-VmRVE
 
+# this section pulls data depending on the date
+@app.callback(
+    Output("memory", "data"),
+    Input("pull_data", "n_clicks"),
+    [State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value'),
+    State("memory", 'data')]
+)
+def get_data(n_clicks, start_date, end_date, data):
+    if not data:
+        prices_df = yf.download(TICKERS, start=start_date, end=end_date, adjusted=True)
+        tickers_vol = prices_df['Volume']
+        tickers_dropdown = prices_df['Close'].columns.tolist()
+
+        data = {"tickers volume": tickers_vol, "tickers dropdown": tickers_dropdown}
+        return data
+
+    else:
+        return data
+
 # this section controls callbacks for gut feel portfolio
 @app.callback(
     [Output("portfolio_table", 'data'),
     Output("alert_auto", 'children'),
     Output("alert_auto", 'color'),
-    Output("alert_auto", 'is_open')],
+    Output("alert_auto", 'is_open'),
+    Output("gut_feel_portfolio_metrics", 'children')],
     Input('submit_crypto', 'n_clicks'),
-    [State('dropdown', 'value'),
+    [State('gut_feel_dropdown', 'value'),
     State('portfolio_weight', 'value'),
     State('portfolio_table', 'data'),
-    State('alert_auto', 'is_open')],
+    State('alert_auto', 'is_open'),
+    State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value')],
     prevent_initial_call = True
 )
-def add_row(n_clicks, crypto, weight, rows, is_open):
+def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
+    cryptos_list = []
+    weights_list = []
+    for i in range(len(rows)):
+        cryptos_list.append(rows[i]["crypto"])
+        weights_list.append(rows[i]["weightage"])
+
     if n_clicks == 1:
         if crypto == None:
             text = "Please select your crypto"
@@ -426,16 +479,18 @@ def add_row(n_clicks, crypto, weight, rows, is_open):
             text = "Please enter your weights for the crypto"
             color = "danger"
 
+        elif weight > 1:
+            text = "Your total weightage is more than 1"
+            color = "danger"
+
         else:
             rows = [{'crypto': crypto, 'weightage': weight}]
+            cryptos_list = [crypto]
+            weights_list = [weight]
             text = "Your crypto has been added"
             color = "success"
-        
-        is_open = True
 
     else:
-        print(crypto)
-        print(weight)
         if crypto == None:
             text = "Please select your crypto"
             color = "danger"   
@@ -445,32 +500,61 @@ def add_row(n_clicks, crypto, weight, rows, is_open):
             color = "danger"
 
         elif len(rows) < 10:
-            # print(rows)
-            cryptos_list = []
-            weights = 0
-            for i in range(len(rows)):
-                cryptos_list.append(rows[i]["crypto"])
-                weights += rows[i]["weightage"]
-
-            print(weight)
-
             if crypto in cryptos_list:
                 text = "You have added this crypto before"
                 color = "danger"
 
-            elif weights + weight > 1:
-                text = "Your total weightage is more than 100"
+            elif sum(weights_list) + weight > 1:
+                text = "Your total weightage is more than 1"
                 color = "danger"
 
             else:
                 rows.append({'crypto': crypto, 'weightage': weight})
+                cryptos_list.append(crypto)
+                weights_list.append(weight)
                 text = "Your crypto has been added"
                 color = "success"
             
         is_open = True
 
-    return rows, text, color, is_open
+    # this section generates the sharpe, returns and vol table
+    if sum(weights_list) == 1:
+        returns, volatility, sharpe_ratio = get_metrics(cryptos_list, weights_list, start_date, end_date)
+        
+        recommended_metrics = pd.DataFrame({"Returns": [returns], "Volatility": [volatility], "Sharpe Ratio": [sharpe_ratio]})
 
+        fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+    
+    else:
+        recommended_metrics = pd.DataFrame({"Returns": [], "Volatility": [], "Sharpe Ratio": []})
+
+        fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
+
+    print(rows)
+    return rows, text, color, is_open, fig
+
+def get_metrics(tickers, weights, start_date, end_date):
+    prices_df = yf.download(tickers, start=start_date, end=end_date, adjusted=True)
+    
+    returns_df = prices_df['Close'].pct_change().dropna()
+    
+    avg_returns = returns_df.mean() * 365
+    cov_mat = returns_df.cov() * 365
+    
+    # RETURNS / EXPECTED RETURNS
+    weights = np.array(weights)
+    portf_rtns = np.dot(weights, avg_returns)
+
+    # VOLATILITY / STANDARD DEVIATION
+    portf_vol = np.sqrt(np.dot(weights.T, np.dot(cov_mat, weights)))
+
+    portf_vol = np.array(portf_vol)
+
+    # SHARPE RATIO
+    portf_sharpe_ratio = portf_rtns / portf_vol
+    
+    return portf_rtns.round(2), portf_vol.round(2), portf_sharpe_ratio.round(2)
+    
 # this section controls callbacks for chart analysis
 @app.callback(
     [Output('display_statistics', 'children'),
@@ -879,23 +963,33 @@ def get_rolling_volatility_df(rtn_series, rolling_window):
 
 # this section controls callbacks for recommended portfolio
 @app.callback(
-    [Output("slider_bar", "min"),
-    Output("slider_bar", "max"),
-    Output("slider_bar", "value"),
+    [Output("vol_rtn_input", "min"),
+    Output("vol_rtn_input", "max"),
+    Output("vol_rtn_input", "value"),
     Output("portfolio_tables", "data"),
-    Output("portfolio_metrics", "children")],
+    Output("portfolio_metrics", "children"),
+    Output("vol_rtn_input", "disabled"),
+    Output("vol_rtn_label", "children"),
+    Output("recommended_alert_auto", 'children'),
+    Output("recommended_alert_auto", 'color'),
+    Output("recommended_alert_auto", 'is_open'),],
     [Input("tabs", "active_tab"),
-    Input('slider_bar', 'value')],
-    [State('start_analyze_date', 'value'),
-    State('end_analyze_date', 'value')]
+    Input('submit_vol_rtn_input', 'n_clicks'),
+    Input("get_reco_portf", 'n_clicks')],
+    [State('vol_rtn_input', 'value'),
+    State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value'),
+    State('recommended_alert_auto', 'is_open'),
+    State('memory', 'data')],
+    prevent_initial_call = True
 )
-def switch_tab(at, slider_val, start_date, end_date):
+def switch_tab(at, n_clicks, n_clicks2, slider_val, start_date, end_date, is_open, mem_data):
     # print(slider_val)
     # print(at)
     n_portfolios = 10 ** 5
     n_days = 365
     # implement again later
-    risky_assets = get_risky_assets(start_date, end_date)
+    risky_assets = get_risky_assets(mem_data, start_date, end_date)
     # risky_assets = ['XWC-USD', 'DGD-USD', 'LRC-USD', 'ANT-USD', 'ADA-USD', 'KNC-USD','DNT-USD', 'ICX-USD','DGB-USD', 'LTC-USD']
     n_assets = len(risky_assets)
 
@@ -903,6 +997,8 @@ def switch_tab(at, slider_val, start_date, end_date):
     np.random.seed(42)
     weights = np.random.random(size=(n_portfolios, n_assets))
     weights /=  np.sum(weights, axis=1)[:, np.newaxis]
+
+    is_open = True
 
     # for best sharpe ratio
     if at == "best":
@@ -925,7 +1021,10 @@ def switch_tab(at, slider_val, start_date, end_date):
         min_vol_value = 0
         max_vol_value = 0
         min_vol_value = 0
-        return min_vol_value, max_vol_value, min_vol_value, table_data, fig
+        label_text = "Input disabled"
+        text = "Success!"
+        color = "success"
+        return min_vol_value, max_vol_value, min_vol_value, table_data, fig, True, label_text, text, color, is_open
 
     # adjusting volatility
     elif at == "volatility":
@@ -950,8 +1049,11 @@ def switch_tab(at, slider_val, start_date, end_date):
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
-            
-            return min_vol_value, max_vol_value, slider_val, table_data, fig
+            label_text = "Input volatility"
+            text = "Success!"
+            color = "success"
+
+            return min_vol_value, max_vol_value, slider_val, table_data, fig, False, label_text, text, color, is_open
 
         else:
             index_from_vol = portf_ind_from_vol(min_vol_value, n_portfolios, portf_results_df)
@@ -970,8 +1072,11 @@ def switch_tab(at, slider_val, start_date, end_date):
 
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
-            
-            return min_vol_value, max_vol_value, min_vol_value, table_data, fig
+            label_text = "Input volatility"
+            text = "No portfolio for specified volatility"
+            color = "danger"
+
+            return min_vol_value, max_vol_value, min_vol_value, table_data, fig, False, label_text, text, color, is_open
 
     # adjusting returns
     elif at == "returns":
@@ -998,7 +1103,11 @@ def switch_tab(at, slider_val, start_date, end_date):
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
-            return min_rtn_value, max_rtn_value, slider_val, table_data, fig
+            label_text = "Input returns"
+            text = "Success!"
+            color = "success"
+
+            return min_rtn_value, max_rtn_value, slider_val, table_data, fig, False, label_text, text, color, is_open
 
         else: 
             index_from_rtn = portf_ind_from_rtn(max_rtn_value, n_portfolios, portf_results_df)
@@ -1018,13 +1127,14 @@ def switch_tab(at, slider_val, start_date, end_date):
             fig = dbc.Table.from_dataframe(recommended_metrics, striped=True, bordered=True, hover=True)
             # fig2 = dbc.Table.from_dataframe(recommended_df, striped=True, bordered=True, hover=True)
             
-            # print(min_rtn_value)
-            # print(max_rtn_value)
-            return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig
+            text = "No portfolio for specified returns"
+            color = "danger"
+            label_text = "Input returns"
 
-def get_risky_assets(start_date, end_date):
-    prices_df = yf.download(TICKERS, start=start_date, end=end_date, adjusted=True)
-    vol_df = prices_df['Volume']
+            return min_rtn_value, max_rtn_value, max_rtn_value, table_data, fig, False, label_text, text, color, is_open
+
+def get_risky_assets(mem_data, start_date, end_date):
+    vol_df = mem_data["tickers volume"]
 
     nan_value = float("NaN")
     vol_df.replace(0, nan_value, inplace=True)
@@ -1199,6 +1309,178 @@ def portf_ind_from_rtn(rtn_input, n_portfolios, portf_results_df):
     min_key = min(portfolios_consider, key=portfolios_consider.get)
 
     return min_key
+
+@app.callback(
+    Output("lstm_weights", "children"),
+    Input("lstm_button", "n_clicks"),
+    [State('start_analyze_date', 'value'),
+    State('end_analyze_date', 'value'),
+    State('portfolio_tables', 'data')]
+)
+def get_lstm_weights(n_clicks, start_date, end_date, reco_data):
+    crypto_list = []
+    weights_list = []
+    for i in range(len(reco_data)):
+        crypto_list.append(reco_data[i]['crypto'])
+        weights_list.append(reco_data[i]['weightage'])
+
+    prices_df = yf.download(crypto_list, start=start_date, end=end_date, adjusted=True)
+    prices_df = prices_df['Close']
+    results = []
+
+    original_price = []
+    for ticker in crypto_list:
+        current_price = prices_df[ticker].iloc[-1]
+        original_price.append(current_price)
+    original_price
+    dataFrames_arr = []
+
+    for ticker in crypto_list:
+
+        close_df = prices_df[ticker]
+
+
+        scaler=MinMaxScaler(feature_range=(0,1))
+        close_df=scaler.fit_transform(np.array(close_df).reshape(-1,1))
+
+        training_size=int(len(close_df)*0.65)
+        test_size=len(close_df)-training_size
+        train_data,test_data=close_df[0:training_size,:],close_df[training_size:len(close_df),:1]
+
+
+        time_step = 100
+        X_train, y_train = create_dataset(train_data, time_step)
+        X_test, ytest = create_dataset(test_data, time_step)
+
+        X_train =X_train.reshape(X_train.shape[0],X_train.shape[1] , 1)
+        X_test = X_test.reshape(X_test.shape[0],X_test.shape[1] , 1)
+
+        model= Sequential()
+        model.add(LSTM(50,return_sequences=True,input_shape=(X_train.shape[1],X_train.shape[2])))
+        model.add(LSTM(50,return_sequences=True))
+        model.add(LSTM(50))
+        model.add(Dense(1))
+        model.compile(loss='mean_squared_error',optimizer='adam') 
+        model.fit(X_train,y_train,validation_data=(X_test,ytest),epochs=5,batch_size = 32,verbose =1)
+
+        shape_input = test_data.shape[0]-100
+
+
+        x_input=test_data[shape_input:].reshape(1,-1)
+
+        temp_input=list(x_input)
+        temp_input=temp_input[0].tolist()
+
+
+
+        lst_output=[]
+        n_steps=100
+        i=0
+        while(i<30):
+            
+            if(len(temp_input)>100):
+                #print(temp_input)
+                x_input=np.array(temp_input[1:])
+                # print("{} day input {}".format(i,x_input))
+                x_input=x_input.reshape(1,-1)
+                x_input = x_input.reshape((1, n_steps, 1))
+                #print(x_input)
+                yhat = model.predict(x_input, verbose=0)
+                # print("{} day output {}".format(i,yhat))
+                temp_input.extend(yhat[0].tolist())
+                temp_input=temp_input[1:]
+                #print(temp_input)
+                lst_output.extend(yhat.tolist())
+                i=i+1
+            else:
+                x_input = x_input.reshape((1, n_steps,1))
+                yhat = model.predict(x_input, verbose=0)
+                # print(yhat[0])
+                temp_input.extend(yhat[0].tolist())
+                # print(len(temp_input))
+                lst_output.extend(yhat.tolist())
+                i=i+1
+
+
+        df3=close_df.tolist()
+        df3.extend(lst_output)
+
+        df3=scaler.inverse_transform(df3).tolist()
+        dataFrames_arr.append(df3)
+
+        results.append(df3[-1])
+
+    future_prices = []
+
+    for pr in results:
+        future_prices.append(pr[0])
+
+    array = []
+
+    for i in range(len(original_price)):
+        eachTicker = []
+        eachTicker.append(original_price[i])
+        eachTicker.append(future_prices[i])
+        array.append(eachTicker)
+
+
+    time_extension = len(df3) - 1
+
+    EndDate = prices_df.index[0] + timedelta(days=time_extension)
+
+    dateIndexes = pd.date_range(start='2020-01-01', end=EndDate)
+
+    df = pd.DataFrame(data = array, 
+                    index = crypto_list, 
+                    columns = ['original_prices','future_prices'])
+    df['pct_change'] = ((df['future_prices'] - df['original_prices'])/df['original_prices']) * 100
+    df.sort_values(by='pct_change',ascending = False,inplace = True)
+
+    new_df = df.copy()
+    new_df['weights'] = [24, 21, 15, 13, 9, 7, 5, 3, 2 , 1 ]
+
+    name = crypto_list[0]
+    column_name = name + " Price"
+    each_df = pd.DataFrame(data = dataFrames_arr[0], 
+                    index = dateIndexes, 
+                    columns = [column_name])
+    
+
+
+    for j in range(1, len(dataFrames_arr)):
+        name = crypto_list[j]
+        column_name = name + " Price"
+        each_df2 = pd.DataFrame(data = dataFrames_arr[j], 
+                        index = dateIndexes, 
+                        columns = [column_name])
+        each_df = pd.merge(each_df, each_df2, left_index=True, right_index=True)
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    for k in range(len(crypto_list)):
+        name = crypto_list[k]
+        column_name = name + " Price"
+
+        # Add traces
+        fig.add_trace(
+            go.Scatter(x=dateIndexes, y=each_df[column_name], name=column_name),
+            secondary_y=False,
+        )
+
+    figure = dcc.Graph(
+        figure = fig
+    )
+    lstm_table = dcc.Table.from_dataframe(new_df, striped=True, bordered=True, hover=True)
+
+    return [figure, lstm_table]
+
+def create_dataset(dataset, time_step=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset)-time_step-1):
+        a = dataset[i:(i+time_step), 0]
+        dataX.append(a)
+        dataY.append(dataset[i + time_step, 0])
+        
+    return np.array(dataX), np.array(dataY)
 
 if __name__ == "__main__":
     app.run_server(debug=True)
