@@ -1354,14 +1354,14 @@ def lstm_predictions(clicks, data, start_date, end_date):
                       index = crypto_list, 
                       columns = ['Current Price','Predicted Price'])
     df['Predicted % Change'] = round(((df['Predicted Price'] - df['Current Price'])/df['Current Price']) * 100, 4)
-    df['Weights'] = weights_list
+    df['Weights from MPT'] = weights_list
     df.sort_values(by='Predicted % Change',ascending = False,inplace = True)
     df.index.names = ['Crypto']
 
     # pin2.1
     new_df = df.copy()
     # new_df['Weights'] = weights_list
-    new_weights = new_df['Weights']
+    new_weights = new_df['Weights from MPT']
 
     # LSTM weights stuff
     # weights_list_series has to be sorted according to predicted % change
