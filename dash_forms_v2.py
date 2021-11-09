@@ -29,7 +29,7 @@ from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
 
 TICKERS = [
-    'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD'
+    'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD'
 ]
 
 # TICKERS = [
@@ -130,7 +130,7 @@ app.layout = dbc.Container(
                     ],
                 ),
                 dbc.Button("Generate Analysis Charts", color="dark", className="mr-1", id="submit_analysis_charts", n_clicks=0 ),
-
+                # pin1
                 # this section displays the analysis charts
                 dbc.Row(id="display_statistics", className="g-0"),
                 html.Div(id="display_charts",
@@ -413,6 +413,7 @@ app.layout = dbc.Container(
 
         dbc.Button("Generate LSTM Predictions", color="dark", className="mr-1", id="lstm_button", n_clicks=0),
         dbc.Row(
+            # pin2
             [
                 html.Div(id="lstm_graph"),
                 html.Div(id="lstm_table"),
@@ -680,11 +681,12 @@ def update_charts(clicks, crypto, start_date, end_date):
                             dbc.Col(
                                 dcc.Graph(
                                     figure = {
+                                        # pin1.1
                                         'data': [
-                                            {'x': close_return_series['Date'], 'y': close_return_series['Close'],'type':'line'}
+                                            {'x': ahv['Date'], 'y': ahv['Close'],'type':'line'}
                                         ],
                                         'layout' : {
-                                            'title': str(crypto) + ' Close Return Series'
+                                            'title': str(crypto) + ' Historical Rolling Volatility'
                                         }
                                     }
                                 )
@@ -860,7 +862,7 @@ def get_metrics(tickers, weights, start_date, end_date):
     portf_sharpe_ratio = portf_rtns / portf_vol
     
     return portf_rtns.round(2), portf_vol.round(2), portf_sharpe_ratio.round(2)
-   
+
 # this section controls callbacks for recommended portfolio
 @app.callback(
     [Output("vol_rtn_input", "min"),
@@ -1349,6 +1351,7 @@ def lstm_predictions(clicks, data, start_date, end_date):
     df['pct_change'] = round(((df['future_prices'] - df['original_prices'])/df['original_prices']) * 100, 4)
     df.sort_values(by='pct_change',ascending = False,inplace = True)
 
+    # pin2.1
     new_df = df.copy()
     new_df['weights'] = weights_list
 
