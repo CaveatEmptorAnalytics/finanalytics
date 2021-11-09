@@ -629,6 +629,10 @@ def update_charts(clicks, crypto, start_date, end_date):
         "Kurtosis": kurtosis,
     }
 
+    # round values in stats_dict to 2dp
+    for key,value in stats_dict.items():
+        stats_dict[key] = round(value, 2)
+
     statistics_df = pd.DataFrame(stats_dict)
     # statistics_df = statistics_df.reset_index()
 
