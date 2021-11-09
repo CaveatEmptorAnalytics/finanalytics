@@ -1,5 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
+import numpy
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -1353,14 +1354,23 @@ def lstm_predictions(clicks, data, start_date, end_date):
                       index = crypto_list, 
                       columns = ['Current Price','Predicted Price'])
     df['Predicted % Change'] = round(((df['Predicted Price'] - df['Current Price'])/df['Current Price']) * 100, 4)
+    df['Weights'] = weights_list
     df.sort_values(by='Predicted % Change',ascending = False,inplace = True)
     df.index.names = ['Crypto']
 
     # pin2.1
     new_df = df.copy()
-    new_df['Weights'] = weights_list
+    # new_df['Weights'] = weights_list
+    new_weights = new_df['Weights']
 
     # LSTM weights stuff
+    # weights_list_series has to be sorted according to predicted % change
+    weights_list_series = numpy.array([float(weight) for weight in new_weights])
+    mpt_weightage = numpy.array([[0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9,0.9]])
+    lstm_weights = numpy.array([0.24, 0.21, 0.15, 0.13, 0.09, 0.07, 0.05, 0.03, 0.02, 0.01])
+    lstm_weightage = numpy.array([0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1])
+    final_weights = weights_list_series * mpt_weightage + lstm_weights * lstm_weightage
+    new_df['Weights Considering Predicted Prices'] = final_weights[0].round(2)
 
     name = crypto_list[0]
     column_name = name + " Price"
