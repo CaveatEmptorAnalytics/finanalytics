@@ -1351,13 +1351,16 @@ def lstm_predictions(clicks, data, start_date, end_date):
 
     df = pd.DataFrame(data = array, 
                       index = crypto_list, 
-                      columns = ['original_prices','future_prices'])
-    df['pct_change'] = round(((df['future_prices'] - df['original_prices'])/df['original_prices']) * 100, 4)
-    df.sort_values(by='pct_change',ascending = False,inplace = True)
+                      columns = ['Current Price','Predicted Price'])
+    df['Predicted % Change'] = round(((df['Predicted Price'] - df['Current Price'])/df['Current Price']) * 100, 4)
+    df.sort_values(by='Predicted % Change',ascending = False,inplace = True)
+    df.index.names = ['Crypto']
 
     # pin2.1
     new_df = df.copy()
-    new_df['weights'] = weights_list
+    new_df['Weights'] = weights_list
+
+    # LSTM weights stuff
 
     name = crypto_list[0]
     column_name = name + " Price"
