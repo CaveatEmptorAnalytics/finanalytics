@@ -29,10 +29,6 @@ from datetime import timedelta, date
 from datetime import datetime
 today = datetime.today().strftime('%Y-%m-%d')
 
-# TICKERS = [
-#     'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD'
-# ]
-
 TICKERS = [
     'BTC-USD','ETH-USD','BNB-USD','USDT-USD','ADA-USD','SOL1-USD','XRP-USD','DOT1-USD','HEX-USD','SHIB-USD','DOGE-USD','USDC-USD','LUNA1-USD','UNI3-USD','AVAX-USD','LINK-USD','LTC-USD','MATIC-USD','ALGO-USD','BCH-USD','XLM-USD','AXS-USD','VET-USD','ATOM1-USD','ICP1-USD','THETA-USD','TRX-USD','FIL-USD','ETC-USD','FTT1-USD','FTM-USD','DAI1-USD','MANA-USD','HBAR-USD','XTZ-USD','CRO-USD','EGLD-USD','XMR-USD','EOS-USD','FLOW1-USD','GRT2-USD','CAKE-USD','AAVE-USD','MIOTA-USD','RUNE-USD','QNT-USD','ONE2-USD','BSV-USD','KSM-USD','NEO-USD','HNT1-USD','CHZ-USD','WAVES-USD','BTT1-USD','MKR-USD','STX1-USD','ENJ-USD','ZEC-USD','CELO-USD','DASH-USD','COMP-USD','AMP1-USD','TFUEL-USD','CRV-USD','OMG-USD','HOT1-USD','BAT-USD','AR-USD','SAND-USD','XEM-USD','DCR-USD','CTC1-USD','ICX-USD','SUSHI-USD','ZIL-USD','ZEN-USD','QTUM-USD','YFI-USD','ANKR-USD','TUSD-USD','RVN-USD','SNX-USD','BTG-USD','XDC-USD','CEL-USD','ZRX-USD','OMI-USD','CCXX-USD','BNT-USD','SC-USD','SRM-USD','KDA-USD','ONT-USD','IOST-USD','1INCH-USD','NANO-USD','WAXP-USD','RAY-USD','LRC-USD','VGX-USD','LRC-USD','DGB-USD','UMA-USD','CELR-USD','WIN1-USD','GNO-USD','C98-USD','XWC-USD','IOTX-USD','DFI-USD','NU-USD','FET-USD','GLM-USD','CKB-USD','KAVA-USD','STORJ-USD','RSR-USD','COTI-USD','SXP-USD','LSK-USD','NMR-USD','VTHO-USD','XVG-USD','MED-USD','TWT-USD','BCD-USD','VLX-USD','CTSI-USD','ARRR-USD','RLC-USD','SNT-USD','CVC-USD','VRA-USD','ARDR-USD','BAND-USD','HIVE-USD','ERG-USD','NKN-USD','STMX-USD','ETN-USD','EWT-USD','OXT-USD','ROSE-USD','STRAX-USD','REP-USD','SAPP-USD','ARK-USD','DAG-USD','MIR1-USD','MLN-USD','MAID-USD','STEEM-USD','XCH-USD','TOMO-USD','FUN-USD','MTL-USD','DERO-USD','ZNN-USD','SYS-USD','ACH-USD','PHA-USD','ANT-USD','WAN-USD','BAL-USD','RBTC-USD','CLV-USD','AVA-USD','META-USD','KIN-USD','BTS-USD','ADX-USD','KMD-USD','MCO-USD','IRIS-USD','HNS-USD','XHV-USD','NYE-USD','FIRO-USD','TT-USD','ZEL-USD','ABBC-USD','DNT-USD','MONA-USD','XNC-USD','NRG-USD','ELA-USD','GAS-USD','AION-USD','DMCH-USD','DIVI-USD','WOZX-USD','BTM-USD','PAC-USD','BEPRO-USD','NIM-USD','GRS-USD','FRONT-USD','WTC-USD','REV-USD','APL-USD','BEAM-USD','CUDOS-USD','FIO-USD','BCN-USD','DGD-USD','SBD-USD','VERI-USD','RDD-USD','SRK-USD','NULS-USD','VITE-USD','PCX-USD','MARO-USD','XCP-USD','SOLVE-USD','PIVX-USD','SERO-USD','AXEL-USD','CET-USD','NXS-USD','VSYS-USD','ATRI-USD','GXC-USD','VTC-USD','CRU-USD','CUT-USD','AE-USD','MWC-USD','GO-USD','FSN-USD','CTXC-USD','ADK-USD','GRIN-USD','KRT-USD','LOKI-USD','ZANO-USD','WICC-USD','PPT-USD','MHC-USD','GBYTE-USD','NAV-USD','MASS-USD','QASH-USD','VAL1-USD','NEBL-USD','XSN-USD','GAME-USD','NMC-USD','HC-USD','NAS-USD','BTC2-USD','ETP-USD','AMB-USD','PPC-USD','RSTR-USD','LBC-USD','PAI-USD','FO-USD','WABI-USD','PART-USD','NXT-USD','CHI-USD','BIP-USD','SALT-USD','MAN-USD','DTEP-USD','QRL-USD','SKY-USD','OBSR-USD','FCT-USD','PI-USD','MRX-USD','DCN-USD','TRUE-USD','PZM-USD','DMD-USD','EMC2-USD','LCC-USD','BHP-USD','PLC-USD','RINGX-USD','INSTAR-USD','TRTL-USD','QRK-USD','PAY-USD','YOYOW-USD','HPB-USD','SCC3-USD','SCP-USD','UBQ-USD','LEDU-USD','NLG-USD','DNA1-USD','NVT-USD','ACT-USD','XDN-USD','BHD-USD','BLOCK-USD','SFT-USD','SMART-USD','POA-USD','CMT1-USD','HTML-USD','AEON-USD','XMY-USD','WGR-USD','GLEEC-USD','INT-USD','DYN-USD','VIA-USD','XMC-USD','VEX-USD','GHOST1-USD','IDNA-USD','FLO-USD','ZYN-USD','PMEER-USD','FTC-USD','HTDF-USD','BTX-USD','TERA-USD','VIN-USD','OTO-USD','BLK-USD','ILC-USD','CURE-USD','WINGS-USD','NYZO-USD','MIR-USD','EDG-USD','GRC-USD','XST-USD','USNBT-USD','IOC-USD','GCC1-USD','DIME-USD','POLIS-USD','FTX-USD','COLX-USD','CRW-USD','BCA-USD','OWC-USD','FAIR-USD','TUBE-USD','SONO1-USD','PHR-USD','MBC-USD','XLT-USD','SUB-USD','AYA-USD','GHOST-USD','BPS-USD','NIX-USD','XRC-USD','MGO-USD','XBY-USD','DDK-USD','ERK-USD','HYC-USD','XAS-USD','BPC-USD','SNGLS-USD','ATB-USD','FRST-USD','COMP1-USD','OURO-USD','BDX-USD','ALIAS-USD','FLASH-USD','NLC2-USD','CSC-USD','ECC-USD','CLAM-USD','UNO-USD','BONO-USD','MOAC-USD','LKK-USD','ECA-USD','DACC-USD','RBY-USD','HNC-USD','SPHR-USD','MINT-USD','AIB-USD','XUC-USD','HONEY3-USD','DUN-USD','MTC2-USD','JDC-USD','CCA-USD','SLS-USD','DCY-USD','MIDAS-USD','BRC-USD','GRN-USD','KNC-USD','LRG-USD','BONFIRE-USD','BST-USD','SFMS-USD','BST-USD'
 ]
@@ -48,19 +44,19 @@ app.layout = dbc.Container(
                     html.H1("Input the following information", className="display-3"),
                     html.Hr(className="my-2"),
                     # this section is for input investment amount
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Label("Investment Amount", html_for="investment"),
-                                    dbc.Input(
-                                        type="text",
-                                        id="investment",
-                                    ),
-                                ],
-                            ),
-                        ]
-                    ),
+                    # dbc.Row(
+                    #     [
+                    #         dbc.Col(
+                    #             [
+                    #                 dbc.Label("Investment Amount", html_for="investment"),
+                    #                 dbc.Input(
+                    #                     type="text",
+                    #                     id="investment",
+                    #                 ),
+                    #             ],
+                    #         ),
+                    #     ]
+                    # ),
                     # this section is for the input start and end date
                     dbc.Row(
                         [
@@ -832,7 +828,7 @@ def add_row(n_clicks, crypto, weight, rows, is_open, start_date, end_date):
         is_open = True
 
     # this section generates the sharpe, returns and vol table
-    if isinstance(weights_list[0], float) and sum(weights_list) == 1:
+    if isinstance(weights_list[0], float) and round(sum(weights_list), 1) == 1.0:
         returns, volatility, sharpe_ratio = get_metrics(cryptos_list, weights_list, start_date, end_date)
         
         recommended_metrics = pd.DataFrame({"Returns": [returns], "Volatility": [volatility], "Sharpe Ratio": [sharpe_ratio]})
@@ -1135,9 +1131,10 @@ def update_portfolio_comparison(clicks, gut_feel_data, reco_data, start_date, en
         reco_tickers.append(reco_data[i]['crypto'])
         reco_weights.append(reco_data[i]['weightage'])
     
-    print(gut_feel_weights)
+    print(round(sum(gut_feel_weights), 1) == 1.0)
+    print(round(sum(gut_feel_weights), 1) == 1)
     print(type(gut_feel_weights[0]))
-    if isinstance(gut_feel_weights[0], str) or sum(gut_feel_weights) != 1:
+    if isinstance(gut_feel_weights[0], str) or round(sum(gut_feel_weights), 1) != 1.0:
         text = "Your total weights for you selected portfolio is not 1!"
         color = "danger"
         is_open = True
